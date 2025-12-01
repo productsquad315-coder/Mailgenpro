@@ -1,0 +1,204 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Zap, TrendingUp, AlertTriangle } from "lucide-react";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { toast } from "@/hooks/use-toast";
+
+interface UsageCardProps {
+  userId: string;
+}
+
+const UsageCard = ({ userId }: UsageCardProps) => {
+  const navigate = useNavigate();
+  const [usage, setUsage] = useState({
+    used: 0,
+    limit: 5,
+    topupCredits: 0,
+    plan: "free",
+  });
+  const [loading, setLoading] = useState(true);
+  const [hasShownLowCreditWarning, setHasShownLowCreditWarning] = useState(false);
+
+  useEffect(() => {
+    const fetchUsage = async () => {
+      const { data, error } = await supabase
+        .from("user_usage")
+        .select("*")
+        .eq("user_id", userId)
+        .single();
+
+      if (error) {
+        console.error("Error fetching usage:", error);
+      } else if (data) {
+        setUsage({
+          used: data.generations_used,
+          limit: data.generations_limit,
+          topupCredits: data.topup_credits || 0,
+          plan: data.plan,
+        });
+      }
+      setLoading(false);
+    };
+
+    fetchUsage();
+
+    // Set up realtime subscription
+    const channel = supabase
+      .channel("user_usage_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "user_usage",
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          if (payload.new && typeof payload.new === "object") {
+            const newData = payload.new as any;
+            setUsage({
+              used: newData.generations_used,
+              limit: newData.generations_limit,
+              topupCredits: newData.topup_credits || 0,
+              plan: newData.plan,
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [userId]);
+
+  // Low credit notification effect
+  useEffect(() => {
+    if (loading) return;
+
+    const creditsRemaining = Math.max(0, usage.limit - usage.used) + usage.topupCredits;
+    const isLowCredits = creditsRemaining < 10;
+    const isOutOfCredits = creditsRemaining <= 0;
+
+    if (isLowCredits && !isOutOfCredits && !hasShownLowCreditWarning) {
+      toast({
+        title: "Low Credits Warning",
+        description: `You have ${creditsRemaining} credits remaining. Consider buying more to continue creating campaigns.`,
+        variant: "destructive",
+        action: (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/billing')}
+            className="gap-2"
+          >
+            <TrendingUp className="w-4 h-4" />
+            Buy Credits
+          </Button>
+        ),
+      });
+      setHasShownLowCreditWarning(true);
+    }
+
+    // Reset warning flag when credits are replenished above threshold
+    if (creditsRemaining >= 10 && hasShownLowCreditWarning) {
+      setHasShownLowCreditWarning(false);
+    }
+  }, [usage, loading, hasShownLowCreditWarning, navigate]);
+
+  if (loading) {
+    return (
+      <Card className="glass-card p-6">
+        <div className="animate-pulse h-24" />
+      </Card>
+    );
+  }
+
+  const totalCredits = usage.limit + usage.topupCredits; // Total potential credits
+  const creditsRemaining = Math.max(0, usage.limit - usage.used) + usage.topupCredits;
+  const isLowCredits = creditsRemaining < 10;
+  const isOutOfCredits = creditsRemaining <= 0;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Card className="glass-card p-6 hover-lift">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h3 className="font-semibold text-lg mb-1">🔋 Credit Balance</h3>
+            <p className="text-sm text-muted-foreground capitalize">
+              {usage.plan === 'trial' ? 'Free Trial' : `${usage.plan} Plan`}
+            </p>
+          </div>
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
+            <Zap className="w-6 h-6 text-primary" />
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-sm">
+            <span>
+              {creditsRemaining} credits remaining
+            </span>
+            {isLowCredits && !isOutOfCredits && (
+              <span className="text-yellow-500 font-medium">
+                Running low!
+              </span>
+            )}
+            {isOutOfCredits && (
+              <span className="text-destructive font-medium">
+                Out of credits
+              </span>
+            )}
+          </div>
+          <Progress value={percentage} className="h-2" />
+          <p className="text-xs text-muted-foreground">
+            {usage.used} / {totalCredits} credits used
+            {usage.topupCredits > 0 && (
+              <span className="ml-1 text-primary">
+                ({usage.topupCredits} bonus)
+              </span>
+            )}
+          </p>
+        </div>
+
+        {isOutOfCredits && (
+          <div className="mt-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+            <p className="text-sm text-destructive font-medium mb-2">
+              You're out of credits — buy a pack to continue.
+            </p>
+            <Button
+              variant="default"
+              className="w-full"
+              size="sm"
+              onClick={() => navigate('/billing')}
+            >
+              <TrendingUp className="w-4 h-4 mr-2" />
+              Buy Credits
+            </Button>
+          </div>
+        )}
+        {isLowCredits && !isOutOfCredits && (
+          <Button
+            variant="outline"
+            className="w-full mt-4 hover-lift"
+            size="sm"
+            onClick={() => navigate('/billing')}
+          >
+            <TrendingUp className="w-4 h-4 mr-2" />
+            Buy More Credits
+          </Button>
+        )}
+      </Card>
+    </motion.div>
+  );
+};
+
+export default UsageCard;

@@ -1,0 +1,16 @@
+project_id = "qijgrzfedoknlgljsyka"
+
+[functions.generate-campaign]
+verify_jwt = false
+
+[functions.improve-email]
+verify_jwt = false
+
+[functions.lemon-squeezy-webhook]
+verify_jwt = false
+
+[functions.translate-campaign]
+verify_jwt = false
+
+[functions.reset-monthly-credits]
+verify_jwt = false
