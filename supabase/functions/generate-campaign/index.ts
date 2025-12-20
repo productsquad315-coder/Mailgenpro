@@ -62,6 +62,7 @@ serve(async (req) => {
       );
     }
 
+
     const { campaignId, url, brandGuidelines } = validationResult.data;
 
     // Use service role for campaign operations
@@ -200,9 +201,15 @@ HUMAN VOICE GUIDELINES:
 • No Clichés: Absolutely NO "revolutionize," "game-changer," "excited to announce," or "take it to the next level."
 • Directness: Get to the point. Respect the reader's time.
 
+WORD COUNT STRICTNESS:
+• You MUST adhere to the requested word count within +/- 10%.
+• Do NOT use "filler" or "fluff" to hit word counts. If a message is complete, stop.
+• If ${wordsPerEmail} is high, use detailed storytelling, case studies, or deep benefit analysis to add value, not just words.
+
 CONVERSION FOCUS:
 • Each email must have ONE specific goal (Curiosity, Education, Objection Handling, or Direct Close).
-• CTAs must be specific to the product (e.g., "Start Your 14-Day Free Trial" vs generic "Click here").`;
+• CTAs must be specific to the product (e.g., "Start Your 14-Day Free Trial" vs generic "Click here").
+• CTA text should be between 2-5 words.`;
 
     const userPrompt = `CAMPAIGN BRIEF:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -222,7 +229,13 @@ REQUIRED ARC:
 3. The Logic Reveal (How this product solves it differently).
 4. The Final Call (Transformation-based urgency).
 
-FORMAT: Return valid JSON with "emails" array. Each email needs "type", "subject", "content" (plain text), and "html" (structured body content).`;
+FORMAT: Return valid JSON with "emails" array. Each email needs "type", "subject", "content" (plain text), and "html" (structured body content).
+
+STRICT WORD COUNT AUDIT:
+Before finalizing each email, count the words. If you are under or over by more than 10% of ${wordsPerEmail}, rewrite it.
+Current Target: ${wordsPerEmail} words.
+Allowed Range: ${Math.round(wordsPerEmail * 0.9)} - ${Math.round(wordsPerEmail * 1.1)} words.
+Subject line limit: 60 characters.`;
 
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     const resp = await fetch("https://api.openai.com/v1/chat/completions", {

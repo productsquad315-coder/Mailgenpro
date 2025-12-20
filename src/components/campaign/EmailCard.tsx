@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Wand2, Check, X, ChevronDown, ChevronUp, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -20,9 +20,11 @@ interface EmailCardProps {
   totalEmails: number;
   ctaLink?: string | null;
   includeCTA?: boolean;
+  templateStyle?: 'minimal' | 'bold' | 'tech' | 'corporate';
+  brandName?: string;
 }
 
-const EmailCard = ({ email, index, campaignId, dripDuration, totalEmails, ctaLink, includeCTA }: EmailCardProps) => {
+const EmailCard = ({ email, index, campaignId, dripDuration, totalEmails, ctaLink, includeCTA, templateStyle = 'minimal', brandName = "Brand" }: EmailCardProps) => {
   const [isExpanded, setIsExpanded] = useState(index === 0);
   const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState(email.content);
@@ -87,6 +89,7 @@ const EmailCard = ({ email, index, campaignId, dripDuration, totalEmails, ctaLin
     ? calculateSendDay(dripDuration, email.sequence_number, totalEmails)
     : null;
 
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -130,75 +133,79 @@ const EmailCard = ({ email, index, campaignId, dripDuration, totalEmails, ctaLin
           </div>
         </div>
 
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="border-t border-border/50"
-          >
-            <div className="p-6 space-y-4">
-              {isEditing ? (
-                <>
-                  <Textarea
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    rows={12}
-                    className="font-mono text-sm"
-                  />
-                  <div className="flex gap-2">
-                    <Button onClick={handleSave} size="sm">
-                      <Check className="w-4 h-4 mr-2" />
-                      Save Changes
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        setContent(email.content);
-                        setIsEditing(false);
-                      }}
-                      variant="outline"
-                      size="sm"
-                    >
-                      <X className="w-4 h-4 mr-2" />
-                      Cancel
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="prose prose-invert max-w-none">
-                    <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">
-                      {content}
-                    </pre>
-                  </div>
-                  {isTrial && <MailgenproWatermark />}
-                  <div className="flex flex-wrap gap-2 pt-4 border-t border-border/50">
-                    <SmartPreview
-                      subject={email.subject}
-                      content={content}
-                      htmlContent={email.html_content}
-                      ctaLink={ctaLink}
-                      includeCTA={includeCTA}
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="border-t border-border/50"
+            >
+              <div className="p-6 space-y-4">
+                {isEditing ? (
+                  <>
+                    <Textarea
+                      value={content}
+                      onChange={(e) => setContent(e.target.value)}
+                      rows={12}
+                      className="font-mono text-sm"
                     />
-                    <Button
-                      onClick={handleImprove}
-                      variant="outline"
-                      size="sm"
-                      disabled={improving}
-                    >
-                      <Wand2 className="w-4 h-4 mr-2" />
-                      {improving ? "Improving..." : "One-Click Improve"}
-                    </Button>
-                    <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
-                      Edit Manually
-                    </Button>
-                  </div>
-                </>
-              )}
-            </div>
-          </motion.div>
-        )}
+                    <div className="flex gap-2">
+                      <Button onClick={handleSave} size="sm">
+                        <Check className="w-4 h-4 mr-2" />
+                        Save Changes
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setContent(email.content);
+                          setIsEditing(false);
+                        }}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <X className="w-4 h-4 mr-2" />
+                        Cancel
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="prose prose-invert max-w-none">
+                      <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">
+                        {content}
+                      </pre>
+                    </div>
+                    {isTrial && <MailgenproWatermark />}
+                    <div className="flex flex-wrap gap-2 pt-4 border-t border-border/50">
+                      <SmartPreview
+                        subject={email.subject}
+                        content={content}
+                        htmlContent={email.html_content}
+                        ctaLink={ctaLink}
+                        includeCTA={includeCTA}
+                        templateStyle={templateStyle}
+                        brandName={brandName}
+                      />
+                      <Button
+                        onClick={handleImprove}
+                        variant="outline"
+                        size="sm"
+                        disabled={improving}
+                      >
+                        <Wand2 className="w-4 h-4 mr-2" />
+                        {improving ? "Improving..." : "One-Click Improve"}
+                      </Button>
+                      <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
+                        Edit Manually
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </Card>
     </motion.div>
   );

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Eye, Trash2, ExternalLink } from "lucide-react";
+import { Eye, Trash2, ExternalLink, Loader2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +26,7 @@ interface CampaignsListProps {
 
 const CampaignsList = ({ userId }: CampaignsListProps) => {
   const navigate = useNavigate();
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -70,24 +71,35 @@ const CampaignsList = ({ userId }: CampaignsListProps) => {
     };
   }, [userId]);
 
-  const handleDelete = async (id: string) => {
-    // Optimistically remove from UI immediately
-    setCampaigns(prev => prev.filter(c => c.id !== id));
-    toast.success("Campaign deleted");
+  const handleDelete = async (id: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
 
-    // Perform actual deletion in background
+    setDeletingIds(prev => new Set(prev).add(id));
+
+    // Performance: Wait a tiny bit for the UI to breathe
+    await new Promise(r => setTimeout(r, 100));
+
     const { error } = await supabase.from("campaigns").delete().eq("id", id);
 
     if (error) {
-      // If deletion fails, refetch to restore
-      const { data } = await supabase
-        .from("campaigns")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false });
-
-      setCampaigns(data || []);
       toast.error("Failed to delete campaign");
+      setDeletingIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    } else {
+      // Optimistically remove from UI
+      setCampaigns(prev => prev.filter(c => c.id !== id));
+      toast.success("Campaign deleted");
+      setDeletingIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -191,8 +203,13 @@ const CampaignsList = ({ userId }: CampaignsListProps) => {
                       variant="ghost"
                       size="icon"
                       className="hover:text-destructive"
+                      disabled={deletingIds.has(campaign.id)}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      {deletingIds.has(campaign.id) ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-4 h-4" />
+                      )}
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>

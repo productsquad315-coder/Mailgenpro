@@ -18,7 +18,18 @@ import URLSummary from "@/components/campaign/URLSummary";
 import AutoTranslate from "@/components/campaign/AutoTranslate";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Copy, ExternalLink, Sparkles, Send } from "lucide-react";
+import { Check, Copy, ExternalLink, Sparkles, Send, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { motion } from "framer-motion";
 import SendCampaignModal from "@/components/campaign/SendCampaignModal";
 import QuickSendModal from "@/components/campaign/QuickSendModal";
@@ -35,6 +46,7 @@ const CampaignView = () => {
   const [campaign, setCampaign] = useState<any | null>(null);
   const [emails, setEmails] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [templateStyle, setTemplateStyle] = useState<'minimal' | 'bold' | 'tech' | 'corporate'>('minimal');
 
   useEffect(() => {
     const fetchCampaign = async () => {
@@ -144,7 +156,8 @@ const CampaignView = () => {
           brandName,
           campaign?.cta_link || null,
           campaign?.include_cta ?? true,
-          isTrial
+          isTrial,
+          templateStyle
         );
 
         zip.file(fileName, htmlContent);
@@ -171,6 +184,17 @@ const CampaignView = () => {
     } catch (error) {
       console.error("Export error:", error);
       toast.error("Failed to export emails");
+    }
+  };
+
+  const handleDeleteCampaign = async () => {
+    try {
+      const { error } = await supabase.from("campaigns").delete().eq("id", id);
+      if (error) throw error;
+      toast.success("Campaign deleted");
+      navigate("/dashboard");
+    } catch (error) {
+      toast.error("Failed to delete campaign");
     }
   };
 
@@ -223,10 +247,49 @@ const CampaignView = () => {
                 </Button>
               </>
             )}
-            <Button onClick={handleExportHTML} className="glow">
-              <Download className="w-4 h-4 mr-2" />
-              Export HTML
-            </Button>
+            <div className="flex items-center gap-2">
+              <select
+                value={templateStyle}
+                onChange={(e) => setTemplateStyle(e.target.value as any)}
+                className="bg-background border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+              >
+                <option value="minimal">Minimal Style</option>
+                <option value="bold">Bold Style</option>
+                <option value="tech">Tech Style</option>
+                <option value="corporate">Corporate Style</option>
+              </select>
+              <Button onClick={handleExportHTML} className="glow">
+                <Download className="w-4 h-4 mr-2" />
+                Export HTML
+              </Button>
+
+              {!isGuest && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete campaign?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will permanently delete "{campaign.name}" and all its emails. This cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDeleteCampaign}
+                        className="bg-destructive hover:bg-destructive/90"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </div>
           </div>
         </div>
 
@@ -295,6 +358,8 @@ const CampaignView = () => {
                     totalEmails={emails.length}
                     ctaLink={campaign.cta_link}
                     includeCTA={campaign.include_cta}
+                    templateStyle={templateStyle}
+                    brandName={campaign?.analyzed_data?.title || campaign?.name || "Brand"}
                   />
                 </EmailCardErrorBoundary>
                 {/* Blur overlay for emails 4+ for guests */}

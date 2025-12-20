@@ -18,6 +18,7 @@ const SharedCampaignView = () => {
   const [emails, setEmails] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [allowExport, setAllowExport] = useState(false);
+  const [templateStyle, setTemplateStyle] = useState<'minimal' | 'bold' | 'tech' | 'corporate'>('minimal');
 
   useEffect(() => {
     const fetchSharedCampaign = async () => {
@@ -102,7 +103,8 @@ const SharedCampaignView = () => {
           brandName,
           campaign?.cta_link || null,
           campaign?.include_cta ?? true,
-          true // Always include watermark for shared campaigns
+          true, // Always include watermark for shared campaigns
+          templateStyle
         );
 
         zip.file(fileName, htmlContent);
@@ -150,10 +152,22 @@ const SharedCampaignView = () => {
           </Button>
           <div className="flex gap-2">
             {allowExport && (
-              <Button onClick={handleExportHTML} className="glow">
-                <Download className="w-4 h-4 mr-2" />
-                Export HTML
-              </Button>
+              <div className="flex items-center gap-2">
+                <select
+                  value={templateStyle}
+                  onChange={(e) => setTemplateStyle(e.target.value as any)}
+                  className="bg-background border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                >
+                  <option value="minimal">Minimal Style</option>
+                  <option value="bold">Bold Style</option>
+                  <option value="tech">Tech Style</option>
+                  <option value="corporate">Corporate Style</option>
+                </select>
+                <Button onClick={handleExportHTML} className="glow">
+                  <Download className="w-4 h-4 mr-2" />
+                  Export HTML
+                </Button>
+              </div>
             )}
           </div>
         </div>
@@ -228,6 +242,8 @@ const SharedCampaignView = () => {
                 campaignId={campaign.id}
                 dripDuration={campaign.drip_duration}
                 totalEmails={emails.length}
+                templateStyle={templateStyle}
+                brandName={campaign?.analyzed_data?.title || campaign?.name || "Brand"}
               />
             ))}
           </div>

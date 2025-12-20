@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Eye, Monitor, Smartphone, Mail, Sun, Moon } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { motion } from "framer-motion";
+import { generateESPReadyHTML } from "@/lib/emailUtils";
 
 interface SmartPreviewProps {
   subject: string;
@@ -11,38 +12,31 @@ interface SmartPreviewProps {
   htmlContent: string;
   ctaLink?: string | null;
   includeCTA?: boolean;
+  templateStyle?: 'minimal' | 'bold' | 'tech' | 'corporate';
+  brandName?: string;
 }
 
-const SmartPreview = ({ subject, content, htmlContent, ctaLink, includeCTA = true }: SmartPreviewProps) => {
+const SmartPreview = ({
+  subject,
+  content,
+  htmlContent,
+  ctaLink,
+  includeCTA = true,
+  templateStyle = 'minimal',
+  brandName = 'Your Brand'
+}: SmartPreviewProps) => {
   const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
-  const renderCTA = () => {
-    if (!includeCTA) return null;
-
-    if (ctaLink) {
-      return (
-        <div className="mt-8 text-center">
-          <a
-            href={ctaLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block px-8 py-3 bg-gradient-to-br from-primary to-accent text-white font-semibold rounded-md no-underline hover:opacity-90 transition-opacity"
-          >
-            Get Started Now
-          </a>
-        </div>
-      );
-    }
-
-    return (
-      <div className="mt-8 text-center">
-        <div className="inline-block px-8 py-3 bg-gradient-to-br from-primary to-accent text-white font-semibold rounded-md cursor-default">
-          Get Started Now
-        </div>
-      </div>
-    );
-  };
+  // Generate the themed HTML for preview using the same logic as the export
+  const themedHtml = generateESPReadyHTML(
+    { subject, content, html_content: htmlContent },
+    brandName,
+    ctaLink || null,
+    includeCTA,
+    false, // Don't include watermark in smart preview
+    templateStyle
+  );
 
   return (
     <Dialog>
@@ -92,57 +86,50 @@ const SmartPreview = ({ subject, content, htmlContent, ctaLink, includeCTA = tru
             </div>
           </div>
 
-          {/* Inbox Preview */}
+          {/* Inbox Preview Wrapper */}
           <motion.div
-            key={`${device}-${theme}`}
+            key={`${device}-${theme}-${templateStyle}`}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className={`rounded-lg border overflow-hidden ${theme === 'dark'
-                ? 'border-gray-700 bg-gray-900'
-                : 'border-border/50 bg-white'
+              ? 'border-gray-700 bg-gray-900'
+              : 'border-border/50 bg-white'
               }`}
           >
-            {/* Email Client Header */}
-            <div className={`border-b p-4 ${theme === 'dark'
-                ? 'bg-gray-800 border-gray-700'
-                : 'bg-muted/30 border-border/50'
+            {/* Subject Line (Inbox Context) */}
+            <div className={`p-4 border-b ${theme === 'dark'
+              ? 'bg-gray-850 border-gray-700 text-gray-100'
+              : 'bg-background border-border/50'
               }`}>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                  <span className="text-white font-semibold">Y</span>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
+                  {brandName.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1">
-                  <div className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-foreground'}`}>
-                    Your Brand
-                  </div>
-                  <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-muted-foreground'}`}>
-                    you@brand.com
-                  </div>
-                </div>
-                <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-muted-foreground'}`}>
-                  2 min ago
+                  <div className="text-sm font-bold">{brandName}</div>
+                  <div className="text-xs text-muted-foreground">To: you@example.com</div>
                 </div>
               </div>
-            </div>
-
-            {/* Subject Line */}
-            <div className={`p-4 border-b ${theme === 'dark'
-                ? 'bg-gray-850 border-gray-700 text-gray-100'
-                : 'bg-background border-border/50'
-              }`}>
               <h3 className="text-lg font-bold">{subject}</h3>
             </div>
 
-            {/* Email Body */}
+            {/* The Actual Email Content (Themed) */}
             <div
-              className={`transition-all ${device === 'mobile' ? 'max-w-sm mx-auto' : 'max-w-3xl mx-auto'
-                } ${theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-white text-black'
+              className={`transition-all ${device === 'mobile' ? 'max-w-sm mx-auto' : 'w-full'
+                } ${theme === 'dark' ? 'bg-[#0f172a]' : 'bg-transparent'
                 }`}
+              style={{ overflow: 'hidden' }}
             >
-              <div className="p-6">
-                <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
-                {renderCTA()}
-              </div>
+              <iframe
+                srcDoc={themedHtml}
+                title="Email Preview"
+                style={{
+                  width: '100%',
+                  height: device === 'mobile' ? '600px' : '800px',
+                  border: 'none',
+                  backgroundColor: 'white'
+                }}
+              />
             </div>
           </motion.div>
 
@@ -150,9 +137,9 @@ const SmartPreview = ({ subject, content, htmlContent, ctaLink, includeCTA = tru
           <div className="bg-muted/30 rounded-lg p-4 text-sm">
             <p className="font-semibold mb-2">Preview Tips:</p>
             <ul className="space-y-1 text-muted-foreground">
-              <li>• This shows how your email will look in most modern email clients</li>
+              <li>• Current Style: <span className="text-primary font-bold uppercase">{templateStyle}</span></li>
               <li>• Subject line length: {subject.length} characters (optimal: 40-60)</li>
-              <li>• Switch between desktop and mobile to check responsiveness</li>
+              <li>• Switch between styles in the main view to see real-time updates</li>
             </ul>
           </div>
         </div>
