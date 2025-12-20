@@ -221,20 +221,6 @@ const CampaignView = () => {
                   )}
                   {copiedAll ? "Copied!" : "Copy All"}
                 </Button>
-                <Button
-                  onClick={() => setSendModalOpen(true)}
-                  variant="outline"
-                >
-                  <Send className="w-4 h-4 mr-2" />
-                  Send to List
-                </Button>
-                <Button
-                  onClick={() => setQuickSendModalOpen(true)}
-                  className="btn-premium"
-                >
-                  <Send className="w-4 h-4 mr-2" />
-                  Quick Send
-                </Button>
               </>
             )}
             <Button onClick={handleExportHTML} className="glow">

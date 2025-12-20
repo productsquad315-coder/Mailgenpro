@@ -18,7 +18,6 @@ const DashboardSidebar = () => {
 
   const navItems = [
     { icon: LayoutDashboard, label: "Campaigns", path: "/dashboard" },
-    { icon: Users, label: "Contacts", path: "/contacts" },
     { icon: CreditCard, label: "Billing", path: "/billing" },
     { icon: User, label: "Profile", path: "/profile" },
     { icon: HelpCircle, label: "Help", path: "/help" },

@@ -44,12 +44,6 @@ const MobileSidebar = () => {
           path: "/dashboard"
         },
         {
-          icon: Users,
-          label: "Contacts",
-          sublabel: "Manage your contact lists",
-          path: "/contacts"
-        },
-        {
           icon: Plus,
           label: "New Campaign",
           sublabel: "Start a new campaign",
