@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { usePageTracking } from "./hooks/usePageTracking";
+import { AuthProvider } from "./contexts/AuthContext";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -38,22 +40,22 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/auth" element={<Auth />} />
-      <Route path="/onboarding" element={<Onboarding />} />
+      <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
       <Route path="/how-it-works" element={<HowItWorks />} />
-      <Route path="/choose-plan" element={<ChoosePlan />} />
+      <Route path="/choose-plan" element={<ProtectedRoute><ChoosePlan /></ProtectedRoute>} />
       <Route path="/guest-flow" element={<GuestCampaignFlow />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/contacts" element={<Contacts />} />
-      <Route path="/create-campaign" element={<CreateCampaign />} />
-      <Route path="/campaign/:id/analyzing" element={<AnalyzingCampaign />} />
-      <Route path="/campaign/:id/sending" element={<SendingProgress />} />
-      <Route path="/campaign/:id" element={<CampaignView />} />
+      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
+      <Route path="/create-campaign" element={<ProtectedRoute><CreateCampaign /></ProtectedRoute>} />
+      <Route path="/campaign/:id/analyzing" element={<ProtectedRoute><AnalyzingCampaign /></ProtectedRoute>} />
+      <Route path="/campaign/:id/sending" element={<ProtectedRoute><SendingProgress /></ProtectedRoute>} />
+      <Route path="/campaign/:id" element={<ProtectedRoute><CampaignView /></ProtectedRoute>} />
       <Route path="/shared/:shareToken" element={<SharedCampaignView />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/billing" element={<Billing />} />
-      <Route path="/admin" element={<Admin />} />
+      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+      <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
+      <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
       <Route path="/help" element={<Help />} />
-      <Route path="/usage" element={<Usage />} />
+      <Route path="/usage" element={<ProtectedRoute><Usage /></ProtectedRoute>} />
       <Route path="/support" element={<Support />} />
       <Route path="/updates" element={<Updates />} />
       <Route path="/terms" element={<TermsOfService />} />
@@ -67,12 +69,14 @@ const AppRoutes = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <RecoveryRedirect />
-        <AppRoutes />
-      </BrowserRouter>
+      <AuthProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <RecoveryRedirect />
+          <AppRoutes />
+        </BrowserRouter>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
