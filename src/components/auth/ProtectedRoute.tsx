@@ -1,7 +1,7 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
-export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+export const ProtectedRoute = ({ children, allowGuest = false }: { children: React.ReactNode, allowGuest?: boolean }) => {
     const { user, loading } = useAuth();
     const location = useLocation();
 
@@ -13,7 +13,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
         );
     }
 
-    if (!user) {
+    if (!user && !allowGuest) {
         // Redirect to auth but preserve the intended location
         return <Navigate to="/auth" state={{ from: location }} replace />;
     }

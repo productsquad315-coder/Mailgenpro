@@ -51,12 +51,12 @@ const AnalyzingCampaign = () => {
   const [campaignUrl, setCampaignUrl] = useState<string>("");
 
   const steps = [
-    "Fetching your landing page...",
-    "Extracting product information...",
-    "Understanding your brand voice...",
-    "Generating email sequence...",
-    "Polishing the copy...",
-    "Almost done! 🚀",
+    { title: "Analyzing Sales DNA", description: "Scanning landing page for unique value propositions..." },
+    { title: "Psych Profile", description: "Identifying core pain points and buyer objections..." },
+    { title: "Setting the Arc", description: "Defining the psychological sequence arc..." },
+    { title: "Writing Emails", description: "Applying conversion frameworks (PAS, AIDA)..." },
+    { title: "Polishing Voice", description: "Removing robotic patterns and fixing word counts..." },
+    { title: "Sequence Ready!", description: "Finalizing your expert high-converting emails..." },
   ];
 
   useEffect(() => {
@@ -71,10 +71,10 @@ const AnalyzingCampaign = () => {
           .eq("id", id)
           .single();
 
-if (campaignError || !campaign) {
-  throw new Error("Campaign not found");
-}
-setCampaignUrl(campaign.url);
+        if (campaignError || !campaign) {
+          throw new Error("Campaign not found");
+        }
+        setCampaignUrl(campaign.url);
 
         // Simulate progress
         const progressInterval = setInterval(() => {
@@ -100,10 +100,10 @@ setCampaignUrl(campaign.url);
         // Get auth header for the request (works for both authenticated and guest users)
         const { data: { session } } = await supabase.auth.getSession();
         const authHeader = session?.access_token ? `Bearer ${session.access_token}` : '';
-        
+
         // Get brand guidelines from location state if available
         const brandGuidelines = (location.state as any)?.brandGuidelines || null;
-        
+
         // Call edge function to analyze and generate
         const { data, error } = await supabase.functions.invoke("generate-campaign", {
           body: {
@@ -124,7 +124,7 @@ setCampaignUrl(campaign.url);
           let errorMessage = "Failed to generate campaign";
           let errorDetails = "";
           let body: any = undefined;
-          
+
           if ((error as any).message) {
             errorMessage = (error as any).message;
           } else if ((error as any).context?.body) {
@@ -137,41 +137,42 @@ setCampaignUrl(campaign.url);
               errorMessage = (error as any).context.body;
             }
           }
-          
+
           const friendly = mapErrorToFriendly(
             { message: errorMessage, details: errorDetails, body, status: (error as any)?.status },
             campaign.url
           );
           throw new Error(friendly);
         }
-        
-if (!data || !data.success) {
-  // Check if there's a detailed error message
-  const errorMsg = data?.details || data?.error || "Failed to generate campaign";
-  const friendly = mapErrorToFriendly({ message: errorMsg }, campaign.url);
-  throw new Error(friendly);
-}
+
+        if (!data || !data.success) {
+          // Check if there's a detailed error message
+          const errorMsg = data?.details || data?.error || "Failed to generate campaign";
+          const friendly = mapErrorToFriendly({ message: errorMsg }, campaign.url);
+          throw new Error(friendly);
+        }
 
         // Update usage only if user is authenticated (not a guest)
         if (campaign.user_id) {
           await supabase.rpc("increment_user_generations", {
             user_id: campaign.user_id,
           });
+        } else {
+          // If it's a guest, we mark it in localStorage so the Auth page can claim it
+          localStorage.setItem("guestCampaignId", id);
         }
 
         setProgress(100);
         setCurrentStep(steps.length - 1);
 
         // Wait a moment before navigating
-        setTimeout(() => {
-          navigate(`/campaign/${id}`);
-        }, 1500);
-} catch (err: any) {
-  console.error("Error analyzing campaign:", err);
-  const friendly = mapErrorToFriendly(err, campaignUrl);
-  setError(friendly);
-  toast.error(friendly);
-}
+        navigate(`/campaign/${id}`, { replace: true });
+      } catch (err: any) {
+        console.error("Error analyzing campaign:", err);
+        const friendly = mapErrorToFriendly(err, campaignUrl);
+        setError(friendly);
+        toast.error(friendly);
+      }
     };
 
     analyzeAndGenerate();
@@ -180,7 +181,7 @@ if (!data || !data.success) {
   const handleCancel = async () => {
     if (id) {
       await supabase.from("campaigns").delete().eq("id", id);
-      
+
       // Check if it's a guest campaign
       const guestCampaignId = localStorage.getItem("guestCampaignId");
       if (guestCampaignId === id) {
@@ -189,7 +190,7 @@ if (!data || !data.success) {
       } else {
         navigate("/dashboard");
       }
-      
+
       toast.success("Campaign cancelled");
     }
   };
@@ -197,7 +198,7 @@ if (!data || !data.success) {
   if (error) {
     const guestCampaignId = localStorage.getItem("guestCampaignId");
     const isGuestError = guestCampaignId === id;
-    
+
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <motion.div
@@ -215,8 +216,8 @@ if (!data || !data.success) {
                 {error}
               </p>
             </div>
-            <Button 
-              onClick={() => navigate(isGuestError ? "/" : "/dashboard")} 
+            <Button
+              onClick={() => navigate(isGuestError ? "/" : "/dashboard")}
               variant="outline"
               className="w-full"
             >
@@ -254,15 +255,20 @@ if (!data || !data.success) {
           </h2>
 
           <AnimatePresence mode="wait">
-            <motion.p
+            <motion.div
               key={currentStep}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="text-lg text-muted-foreground mb-8"
+              className="mb-8"
             >
-              {steps[currentStep]}
-            </motion.p>
+              <h3 className="text-xl font-semibold text-primary mb-2">
+                {steps[currentStep].title}
+              </h3>
+              <p className="text-muted-foreground">
+                {steps[currentStep].description}
+              </p>
+            </motion.div>
           </AnimatePresence>
 
           <div className="space-y-4 mb-8">

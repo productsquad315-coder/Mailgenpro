@@ -104,32 +104,25 @@ const Auth = () => {
         }
       }
 
-      // Always check onboarding status
-      setTimeout(() => {
-        if (!profile?.onboarding_completed) {
-          navigate("/onboarding");
-        } else {
-          navigate("/choose-plan");
-        }
-      }, 1000);
+      // Logic for where to send the user next
+      const pendingCampaignId = localStorage.getItem("pendingCampaignId");
+
+      if (pendingCampaignId) {
+        localStorage.removeItem("pendingCampaignId");
+        navigate(`/campaign/${pendingCampaignId}`);
+        return;
+      }
+
+      if (!profile?.onboarding_completed) {
+        navigate("/onboarding");
+      } else {
+        // If they have campaigns already, send to dashboard. 
+        navigate("/dashboard");
+      }
     } catch (err) {
       console.error("Error in claimGuestCampaign:", err);
       // Still check onboarding even if there's an error
-      try {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("onboarding_completed")
-          .eq("id", userId)
-          .single();
-
-        if (!profile?.onboarding_completed) {
-          navigate("/onboarding");
-        } else {
-          navigate("/choose-plan");
-        }
-      } catch {
-        navigate("/onboarding");
-      }
+      navigate("/onboarding");
     }
   };
 

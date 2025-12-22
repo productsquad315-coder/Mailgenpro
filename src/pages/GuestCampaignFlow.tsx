@@ -112,6 +112,9 @@ const GuestCampaignFlow = () => {
 
       if (campaignError) throw campaignError;
 
+      // Store guest campaign ID for later claiming
+      localStorage.setItem("guestCampaignId", campaign.id);
+
       trackFunnelStep("generate", {
         campaign_id: campaign.id,
         sequence_type: sequenceType

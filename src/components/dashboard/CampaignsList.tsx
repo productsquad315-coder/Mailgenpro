@@ -79,9 +79,6 @@ const CampaignsList = ({ userId }: CampaignsListProps) => {
 
     setDeletingIds(prev => new Set(prev).add(id));
 
-    // Performance: Wait a tiny bit for the UI to breathe
-    await new Promise(r => setTimeout(r, 100));
-
     const { error } = await supabase.from("campaigns").delete().eq("id", id);
 
     if (error) {
@@ -199,18 +196,20 @@ const CampaignsList = ({ userId }: CampaignsListProps) => {
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="hover:text-destructive"
-                      disabled={deletingIds.has(campaign.id)}
-                    >
-                      {deletingIds.has(campaign.id) ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="w-4 h-4" />
-                      )}
-                    </Button>
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="hover:text-destructive"
+                        disabled={deletingIds.has(campaign.id)}
+                      >
+                        {deletingIds.has(campaign.id) ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>

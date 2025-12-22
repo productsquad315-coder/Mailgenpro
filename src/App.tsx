@@ -47,9 +47,9 @@ const AppRoutes = () => {
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
       <Route path="/create-campaign" element={<ProtectedRoute><CreateCampaign /></ProtectedRoute>} />
-      <Route path="/campaign/:id/analyzing" element={<ProtectedRoute><AnalyzingCampaign /></ProtectedRoute>} />
+      <Route path="/campaign/:id/analyzing" element={<ProtectedRoute allowGuest><AnalyzingCampaign /></ProtectedRoute>} />
       <Route path="/campaign/:id/sending" element={<ProtectedRoute><SendingProgress /></ProtectedRoute>} />
-      <Route path="/campaign/:id" element={<ProtectedRoute><CampaignView /></ProtectedRoute>} />
+      <Route path="/campaign/:id" element={<ProtectedRoute allowGuest><CampaignView /></ProtectedRoute>} />
       <Route path="/shared/:shareToken" element={<SharedCampaignView />} />
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />

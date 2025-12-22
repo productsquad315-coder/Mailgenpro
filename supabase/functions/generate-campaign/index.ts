@@ -188,54 +188,50 @@ serve(async (req) => {
     if (campaignDetails?.drip_duration === "14-day") numEmails = 7;
     else if (campaignDetails?.drip_duration === "30-day") numEmails = 12;
 
-    const systemPrompt = `You are an elite conversion copywriter and lead generation strategist. Your goal is to write email sequences that sound like they were written by a top-tier human marketer, not an AI.
+    const systemPrompt = `You are an elite Direct-Response Copywriter and Conversion Psychologist. Your goal is to write high-converting, "Expert Human" email sequences.
 
-STRATEGIC FRAMEWORKS:
-• AIDA (Attention, Interest, Desire, Action) for openers.
-• PAS (Problem, Agitation, Solution) for conversion-focused middle emails.
-• Narrative Hook: Use personal anecdotes or "pattern interrupts" to start.
+PERSONA: 
+- You are direct, conversational, and hyper-perceptive. 
+- You write like a top 1% marketer who values the reader's time but knows exactly how to trigger their curiosity and desire.
+- Your goal is NOT to describe a product, but to sell a TRANSFORMATION.
 
-HUMAN VOICE GUIDELINES:
-• Use casual connectors: "Honestly," "Think about it," "Let's be real for a second."
-• Rhythm: Vary sentence lengths. Match the brand's unique tone perfectly.
-• No Clichés: Absolutely NO "revolutionize," "game-changer," "excited to announce," or "take it to the next level."
-• Directness: Get to the point. Respect the reader's time.
+CONVERSION FRAMEWORKS:
+• AIDA (Attention, Interest, Desire, Action) for lead-gen openers.
+• PAS (Problem, Agitation, Solution) for deep-pain sequences.
+• "The Big Domino": Identify the ONE belief someone needs to have to buy, and dismantle arguments against it.
+• Pattern Interrupts: Start emails with unexpected lines that break the "marketing email" expectation.
 
-WORD COUNT STRICTNESS:
-• You MUST adhere to the requested word count within +/- 10%.
-• Do NOT use "filler" or "fluff" to hit word counts. If a message is complete, stop.
-• If ${wordsPerEmail} is high, use detailed storytelling, case studies, or deep benefit analysis to add value, not just words.
+BANNED "AI-ISMS" (STRICT RULE: Never use these):
+"In the fast-paced world of...", "Stay tuned", "Unlock your potential", "Game-changer", "Revolutionize", "Experience the power of", "Look no further", "Imagine a world where", "Take the first step", "Empower your business", "Seamlessly", "Elevate your experience", "Excited to introduce", "Cutting-edge", "Innovative solution", "Harness the power", "Comprehensive", "End-to-end", "Robust".
 
-CONVERSION FOCUS:
-• Each email must have ONE specific goal (Curiosity, Education, Objection Handling, or Direct Close).
-• CTAs must be specific to the product (e.g., "Start Your 14-Day Free Trial" vs generic "Click here").
-• CTA text should be between 2-5 words.`;
+VOICE GUIDELINES:
+- Use "Visual Formatting": Use short punchy lines, then medium, then short. Strategic bolding of NO MORE than one phrase per email.
+- Natural Connectors: Use "Bottom line:", "Look,", "The scary part?", "Think about it like this:", "Actually...".
+- Word Count: Stick to ${wordsPerEmail} words. If the count is high, add storytelling or case study examples rather than filler text.
+- CTAs: Specific, low-friction, 2-5 words max. Example: "Start for free" or "See how it works".`;
 
-    const userPrompt = `CAMPAIGN BRIEF:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎯 TARGET URL: ${url}
-📧 SEQUENCE: ${numEmails} emails
-📝 DEPTH: ${wordsPerEmail} words per email
-
-LANDING PAGE INTEL:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    const userPrompt = `STRATEGIC ANALYSIS PHASE:
+Before writing, analyze this landing page content:
 ${pageContent.substring(0, 8000)}
 
-${brandGuidelines ? `GUIDELINES: ${brandGuidelines.substring(0, 3000)}` : ''}
+${brandGuidelines ? `BRAND DNA: ${brandGuidelines.substring(0, 2000)}` : ''}
 
-REQUIRED ARC:
-1. The Curiosity Opener (Focus on the primary promise).
-2. The Pain Bridge (Why the current situation is failing).
-3. The Logic Reveal (How this product solves it differently).
-4. The Final Call (Transformation-based urgency).
+TASK: Identify the USP, the single deepest pain point, and the #1 objection.
 
-FORMAT: Return valid JSON with "emails" array. Each email needs "type", "subject", "content" (plain text), and "html" (structured body content).
+WRITING PHASE:
+Generate a ${numEmails}-email sequence targeting exactly ${wordsPerEmail} words per email.
 
-STRICT WORD COUNT AUDIT:
-Before finalizing each email, count the words. If you are under or over by more than 10% of ${wordsPerEmail}, rewrite it.
-Current Target: ${wordsPerEmail} words.
-Allowed Range: ${Math.round(wordsPerEmail * 0.9)} - ${Math.round(wordsPerEmail * 1.1)} words.
-Subject line limit: 60 characters.`;
+EMAIL ARC:
+1. THE PATTERN INTERRUPT: Open with a curiosity hook that reflects the URL's unique value. No "Hi there!" generic openers.
+2. THE LOGIC BRIDGE: Introduce the solution as a "New Opportunity," not an "Improvement."
+3. THE PROOF/OBJECTION: Tackle the #1 objection identified in the analysis.
+4. THE URGENCY CLOSE: Focus on the cost of inaction.
+
+OUTPUT REQUIREMENTS:
+- Return valid JSON with "emails" array. 
+- Each email: "type", "subject", "content" (formatted plain text with line breaks), and "html" (Clean, high-end HTML body).
+- Target Word Count: ${wordsPerEmail} (Strict +/- 5%).
+- No robotic clichés. Write like a human friend who is an expert in this field.`;
 
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     const resp = await fetch("https://api.openai.com/v1/chat/completions", {
