@@ -146,52 +146,75 @@ const Auth = () => {
         },
       });
 
-      if (error) {
-        // Check if it's the database trigger error
-        if (error.message.includes("Database error") || error.message.includes("user_usage")) {
-          toast.error("Signup is temporarily unavailable. Please contact support at support@mailgenpro.com");
-        } else if (error.message.includes("already registered")) {
+      // CRITICAL FIX: Database errors mean the TRIGGER failed, not signup
+      // The user IS created in auth.users even with a "Database error"
+      // We need to handle this and create profiles manually
+
+      const isDatabaseTriggerError = error?.message.includes("Database error") || error?.message.includes("user_usage");
+
+      if (error && !isDatabaseTriggerError) {
+        // Real signup errors (not trigger failures)
+        if (error.message.includes("already registered")) {
           toast.error("This email is already registered. Please sign in instead.");
         } else {
           toast.error(error.message);
         }
         trackFormSubmission('signup', false);
-      } else if (data.user) {
-        // SUCCESS - User was created in auth.users
-        // Now manually create the profile records that the broken trigger should have created
-        try {
-          const userId = data.user.id;
+      } else {
+        // User was created successfully (or trigger failed but user exists)
+        let userId = data?.user?.id;
 
-          // Create profile
-          await supabase.from('profiles').insert({
-            id: userId,
-            email: email,
-            full_name: fullName,
-            app_role: 'user',
-            onboarding_completed: false
-          });
+        // If we have a database error, user was created but we don't have the session
+        // Sign in to get the user ID
+        if (isDatabaseTriggerError && !userId) {
+          try {
+            const { data: signInData } = await supabase.auth.signInWithPassword({
+              email,
+              password,
+            });
+            userId = signInData?.user?.id;
+          } catch (signInError) {
+            console.error('Could not sign in after signup:', signInError);
+          }
+        }
 
-          // Create user_usage
-          await supabase.from('user_usage').insert({
-            user_id: userId,
-            plan: 'trial',
-            generations_limit: 20,
-            generations_used: 0,
-            subscription_status: 'trial',
-            topup_credits: 0
-          });
+        if (userId) {
+          // Manually create the profile records that the trigger should have created
+          try {
+            // Create profile
+            await supabase.from('profiles').insert({
+              id: userId,
+              email: email,
+              full_name: fullName,
+              app_role: 'user',
+              onboarding_completed: false
+            });
 
-          // Create email_credits
-          await supabase.from('email_credits').insert({
-            user_id: userId,
-            credits_free: 50,
-            credits_paid: 0
-          });
+            // Create user_usage
+            await supabase.from('user_usage').insert({
+              user_id: userId,
+              plan: 'trial',
+              generations_limit: 20,
+              generations_used: 0,
+              subscription_status: 'trial',
+              topup_credits: 0
+            });
 
-          console.log('✅ User profile created successfully');
-        } catch (profileError) {
-          console.error('Profile creation error:', profileError);
-          // Don't show error to user - they can still use the app
+            // Create email_credits
+            await supabase.from('email_credits').insert({
+              user_id: userId,
+              credits_free: 50,
+              credits_paid: 0
+            });
+
+            console.log('✅ User profile created successfully');
+          } catch (profileError: any) {
+            console.error('Profile creation error:', profileError);
+            // Ignore duplicate key errors (profile already exists)
+            if (!profileError?.message?.includes('duplicate') && !profileError?.message?.includes('already exists')) {
+              console.warn('Profile setup may have failed');
+            }
+          }
         }
 
         toast.success("Check your email to verify your account!", {
