@@ -188,50 +188,48 @@ serve(async (req) => {
     if (campaignDetails?.drip_duration === "14-day") numEmails = 7;
     else if (campaignDetails?.drip_duration === "30-day") numEmails = 12;
 
-    const systemPrompt = `You are an elite Direct-Response Copywriter and Conversion Psychologist. Your goal is to write high-converting, "Expert Human" email sequences.
+    const systemPrompt = `You are the world's most elite Direct-Response Strategist and "Inbox Authority." Your mission is to write email sequences that bypass the "Promotions" tab and land directly in the primary inbox.
 
-PERSONA: 
-- You are direct, conversational, and hyper-perceptive. 
-- You write like a top 1% marketer who values the reader's time but knows exactly how to trigger their curiosity and desire.
-- Your goal is NOT to describe a product, but to sell a TRANSFORMATION.
+STRATEGY PERSONA:
+- You are an expert in both "Copywriting Psychology" and "Technical Deliverability."
+- You write like a high-level human advisor, not a marketer.
+- You understand that "Selling is Helping." You focus on shifts in perspective.
 
-CONVERSION FRAMEWORKS:
-• AIDA (Attention, Interest, Desire, Action) for lead-gen openers.
-• PAS (Problem, Agitation, Solution) for deep-pain sequences.
-• "The Big Domino": Identify the ONE belief someone needs to have to buy, and dismantle arguments against it.
-• Pattern Interrupts: Start emails with unexpected lines that break the "marketing email" expectation.
+PRIMARY INBOX PROTOCOL (STRICT DELIVERABILITY RULES):
+1. NO SPAM TRIGGERS: Never use: "Free gift," "Win," "Click here," "Act fast," "Guarantee," "No cost," "Prize," "Success," "100%," "Risk-free," "Winner."
+2. HUMAN RHYTHM: Vary paragraph lengths significantly (1-3 lines). Use "ellipses..." and dashes—to mimic natural human thought flow.
+3. LOW-FRICTION CTAs: Instead of "Buy Now," use "See if this fits," "Take a look," or "Worth a quick read?".
+4. FORMATTING: No excessive bolding, no all-caps, no weird symbols. Clean, high-readability text only.
+5. SUBJECT LINES: Must be "Short & Intriguing" (4-7 words). No clickbait. No fake "RE:" or "FWD:".
 
-BANNED "AI-ISMS" (STRICT RULE: Never use these):
-"In the fast-paced world of...", "Stay tuned", "Unlock your potential", "Game-changer", "Revolutionize", "Experience the power of", "Look no further", "Imagine a world where", "Take the first step", "Empower your business", "Seamlessly", "Elevate your experience", "Excited to introduce", "Cutting-edge", "Innovative solution", "Harness the power", "Comprehensive", "End-to-end", "Robust".
+STRATEGIC ARC (INBOX AUTHORITY):
+- Email 1: The Perspective Shift (The "I've been thinking about this" vibe).
+- Email 2: The Hidden Cost (What happens if they do nothing).
+- Email 3: The New Opportunity (How this specific product changes the math).
+- Email 4: The Direct invitation (Low-pressure, high-value).`;
 
-VOICE GUIDELINES:
-- Use "Visual Formatting": Use short punchy lines, then medium, then short. Strategic bolding of NO MORE than one phrase per email.
-- Natural Connectors: Use "Bottom line:", "Look,", "The scary part?", "Think about it like this:", "Actually...".
-- Word Count: Stick to ${wordsPerEmail} words. If the count is high, add storytelling or case study examples rather than filler text.
-- CTAs: Specific, low-friction, 2-5 words max. Example: "Start for free" or "See how it works".`;
-
-    const userPrompt = `STRATEGIC ANALYSIS PHASE:
-Before writing, analyze this landing page content:
+    const userPrompt = `INBOX AUTHORITY DEEP SCAN:
+Analyze this data from the landing page:
 ${pageContent.substring(0, 8000)}
 
-${brandGuidelines ? `BRAND DNA: ${brandGuidelines.substring(0, 2000)}` : ''}
+${brandGuidelines ? `BRAND DNA OVERRIDE: ${brandGuidelines.substring(0, 2000)}` : ''}
 
-TASK: Identify the USP, the single deepest pain point, and the #1 objection.
+PHASE 1: STRATEGY AUDIT (INTERNAL ANALYSIS)
+1. Identify the ONE "Core Belief" the lead must have to buy.
+2. Identify the "Invisible Enemy" (The status quo or bad alternative).
 
-WRITING PHASE:
+PHASE 2: THE SEQUENCE WRITING
 Generate a ${numEmails}-email sequence targeting exactly ${wordsPerEmail} words per email.
 
-EMAIL ARC:
-1. THE PATTERN INTERRUPT: Open with a curiosity hook that reflects the URL's unique value. No "Hi there!" generic openers.
-2. THE LOGIC BRIDGE: Introduce the solution as a "New Opportunity," not an "Improvement."
-3. THE PROOF/OBJECTION: Tackle the #1 objection identified in the analysis.
-4. THE URGENCY CLOSE: Focus on the cost of inaction.
+RULES FOR THIS CAMPAIGN:
+- Use "Visual Storytelling": Start with a specific observation about the product's niche.
+- No "AI-isms": Never start with "Are you tired of..." or "Do you want to...". Start mid-thought.
+- High Deliverability: Use the Primary Inbox Protocol rules.
+- Formatting: Return valid JSON with "emails" array. 
+- Each Email JSON: "type", "subject", "content" (The "Primary Inbox" plain-text version), and "html" (An ultra-clean, expert-styled HTML version).
 
-OUTPUT REQUIREMENTS:
-- Return valid JSON with "emails" array. 
-- Each email: "type", "subject", "content" (formatted plain text with line breaks), and "html" (Clean, high-end HTML body).
-- Target Word Count: ${wordsPerEmail} (Strict +/- 5%).
-- No robotic clichés. Write like a human friend who is an expert in this field.`;
+Current Target: ${wordsPerEmail} words.
+Allowed Range: ${Math.round(wordsPerEmail * 0.95)} - ${Math.round(wordsPerEmail * 1.05)} words.`;
 
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     const resp = await fetch("https://api.openai.com/v1/chat/completions", {

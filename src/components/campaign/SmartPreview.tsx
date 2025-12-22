@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Eye, Monitor, Smartphone, Mail, Sun, Moon } from "lucide-react";
+import { Eye, Monitor, Smartphone, Mail, Sun, Moon, Download, ShieldCheck } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { motion } from "framer-motion";
 import { generateESPReadyHTML } from "@/lib/emailUtils";
@@ -27,6 +27,19 @@ const SmartPreview = ({
 }: SmartPreviewProps) => {
   const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  const handleDownload = () => {
+    const fileName = `${brandName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}_${subject.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.html`;
+    const blob = new Blob([themedHtml], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   // Generate the themed HTML for preview using the same logic as the export
   const themedHtml = generateESPReadyHTML(
@@ -84,6 +97,11 @@ const SmartPreview = ({
               />
               <Moon className="w-4 h-4 text-muted-foreground" />
             </div>
+
+            <Button onClick={handleDownload} className="glow ml-auto">
+              <Download className="w-4 h-4 mr-2" />
+              Download HTML
+            </Button>
           </div>
 
           {/* Inbox Preview Wrapper */}
@@ -134,13 +152,24 @@ const SmartPreview = ({
           </motion.div>
 
           {/* Preview Tips */}
-          <div className="bg-muted/30 rounded-lg p-4 text-sm">
-            <p className="font-semibold mb-2">Preview Tips:</p>
-            <ul className="space-y-1 text-muted-foreground">
-              <li>• Current Style: <span className="text-primary font-bold uppercase">{templateStyle}</span></li>
-              <li>• Subject line length: {subject.length} characters (optimal: 40-60)</li>
-              <li>• Switch between styles in the main view to see real-time updates</li>
-            </ul>
+          <div className="grid md:grid-cols-2 gap-4 text-sm">
+            <div className="bg-muted/30 rounded-lg p-4">
+              <p className="font-semibold mb-2">Preview Tips:</p>
+              <ul className="space-y-1 text-muted-foreground">
+                <li>• Current Style: <span className="text-primary font-bold uppercase">{templateStyle}</span></li>
+                <li>• Subject line length: {subject.length} characters (optimal: 40-60)</li>
+                <li>• Switch between styles in the main view to see real-time updates</li>
+              </ul>
+            </div>
+            <div className="bg-green-500/5 border border-green-500/20 rounded-lg p-4 flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center shrink-0">
+                <ShieldCheck className="w-4 h-4 text-green-500" />
+              </div>
+              <div>
+                <p className="font-semibold text-green-600 dark:text-green-400">Deliverability Analysis</p>
+                <p className="text-xs text-muted-foreground mt-1">This email has been optimized for the **Primary Inbox**. Spam triggers have been removed to bypass promotion filters.</p>
+              </div>
+            </div>
           </div>
         </div>
       </DialogContent>
