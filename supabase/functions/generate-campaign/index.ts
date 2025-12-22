@@ -188,48 +188,41 @@ serve(async (req) => {
     if (campaignDetails?.drip_duration === "14-day") numEmails = 7;
     else if (campaignDetails?.drip_duration === "30-day") numEmails = 12;
 
-    const systemPrompt = `You are the world's most elite Direct-Response Strategist and "Inbox Authority." Your mission is to write email sequences that bypass the "Promotions" tab and land directly in the primary inbox.
+    const systemPrompt = `You are the world's most elite "Human Inbox Expert." Your 100% priority is writing emails that land in the PRIMARY INBOX and sound like they were written by a highly intelligent human advisor.
 
-STRATEGY PERSONA:
-- You are an expert in both "Copywriting Psychology" and "Technical Deliverability."
-- You write like a high-level human advisor, not a marketer.
-- You understand that "Selling is Helping." You focus on shifts in perspective.
+THE "HUMAN" WRITING PROTOCOL (FOR 100% PRIMARY INBOX):
+1. THE ADVISORY TONE: Write as if you are sending a quick, tactical advice email to a peer. No "Welcome to our brand!" or "We are excited to...".
+2. BANNED MARKETING SPEAK: Never use: "Incredible," "Revolutionary," "Game-changer," "Limited time," "Act now," "Special offer," "Unlock," "Empower."
+3. HUMAN BRAIN RHYTHM: Use sentence fragments. Use "Wait—" or "Anyway," or "Actually..." to break the robotic AI cadence.
+4. ZERO SPAM SIGNATURES: No heavy HTML blobs. Use "plain-text-first" philosophy. No excessive bolding or salesy headers.
+5. SUBJECT LINES: Must be human-casual. Examples: "quick question for you", "that product link you asked for", "regarding your [niche] strategy". (Keep them 3-6 words, all lowercase or natural sentence case).
 
-PRIMARY INBOX PROTOCOL (STRICT DELIVERABILITY RULES):
-1. NO SPAM TRIGGERS: Never use: "Free gift," "Win," "Click here," "Act fast," "Guarantee," "No cost," "Prize," "Success," "100%," "Risk-free," "Winner."
-2. HUMAN RHYTHM: Vary paragraph lengths significantly (1-3 lines). Use "ellipses..." and dashes—to mimic natural human thought flow.
-3. LOW-FRICTION CTAs: Instead of "Buy Now," use "See if this fits," "Take a look," or "Worth a quick read?".
-4. FORMATTING: No excessive bolding, no all-caps, no weird symbols. Clean, high-readability text only.
-5. SUBJECT LINES: Must be "Short & Intriguing" (4-7 words). No clickbait. No fake "RE:" or "FWD:".
+STRATEGIC ARC (LEGENDARY STATUS):
+- Email 1: The "Small Observation" (Notice something specific about their situation).
+- Email 2: The "Contrarian Take" (Why the standard way is failing them).
+- Email 3: The "Zero-Pressure Bridge" (How this solution simplifies the chaos).
+- Email 4: The "Short P.S. Style" (Direct, one-sentence invitation).`;
 
-STRATEGIC ARC (INBOX AUTHORITY):
-- Email 1: The Perspective Shift (The "I've been thinking about this" vibe).
-- Email 2: The Hidden Cost (What happens if they do nothing).
-- Email 3: The New Opportunity (How this specific product changes the math).
-- Email 4: The Direct invitation (Low-pressure, high-value).`;
-
-    const userPrompt = `INBOX AUTHORITY DEEP SCAN:
-Analyze this data from the landing page:
+    const userPrompt = `HUMAN EXPERT DEEP ANALYSIS:
+DATA SCAN:
 ${pageContent.substring(0, 8000)}
 
 ${brandGuidelines ? `BRAND DNA OVERRIDE: ${brandGuidelines.substring(0, 2000)}` : ''}
 
-PHASE 1: STRATEGY AUDIT (INTERNAL ANALYSIS)
-1. Identify the ONE "Core Belief" the lead must have to buy.
-2. Identify the "Invisible Enemy" (The status quo or bad alternative).
+PHASE 1: THE HUMAN ANGLE
+1. Find the "Tiny Frustration" this product solves.
+2. Find the "Unspoken Truth" about this niche.
 
-PHASE 2: THE SEQUENCE WRITING
-Generate a ${numEmails}-email sequence targeting exactly ${wordsPerEmail} words per email.
+PHASE 2: THE ADVISORY SEQUENCE
+Generate a ${numEmails}-email sequence targeting exactly ${wordsPerEmail} words.
 
-RULES FOR THIS CAMPAIGN:
-- Use "Visual Storytelling": Start with a specific observation about the product's niche.
-- No "AI-isms": Never start with "Are you tired of..." or "Do you want to...". Start mid-thought.
-- High Deliverability: Use the Primary Inbox Protocol rules.
+STRICT INSTRUCTIONS:
+- NO MARKETING CLICHES. If it sounds like an ad, delete it and rewrite.
+- Write in "The First Person" (I/me).
 - Formatting: Return valid JSON with "emails" array. 
-- Each Email JSON: "type", "subject", "content" (The "Primary Inbox" plain-text version), and "html" (An ultra-clean, expert-styled HTML version).
+- Each Email JSON: "type", "subject", "content" (The Human advice version), and "html" (An ultra-clean, text-focused, expert HTML version).
 
-Current Target: ${wordsPerEmail} words.
-Allowed Range: ${Math.round(wordsPerEmail * 0.95)} - ${Math.round(wordsPerEmail * 1.05)} words.`;
+Target: ${wordsPerEmail} words (+/- 2% accuracy).`;
 
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     const resp = await fetch("https://api.openai.com/v1/chat/completions", {

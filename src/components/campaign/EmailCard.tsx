@@ -184,7 +184,7 @@ const EmailCard = ({ email, index, campaignId, dripDuration, totalEmails, ctaLin
                         htmlContent={email.html_content}
                         ctaLink={ctaLink}
                         includeCTA={includeCTA}
-                        templateStyle={templateStyle}
+                        initialTemplateStyle={templateStyle}
                         brandName={brandName}
                       />
                       <Button

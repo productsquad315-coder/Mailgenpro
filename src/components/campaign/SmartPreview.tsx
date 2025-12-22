@@ -12,7 +12,7 @@ interface SmartPreviewProps {
   htmlContent: string;
   ctaLink?: string | null;
   includeCTA?: boolean;
-  templateStyle?: 'minimal' | 'bold' | 'tech' | 'corporate';
+  initialTemplateStyle?: 'minimal' | 'bold' | 'tech' | 'corporate';
   brandName?: string;
 }
 
@@ -22,11 +22,12 @@ const SmartPreview = ({
   htmlContent,
   ctaLink,
   includeCTA = true,
-  templateStyle = 'minimal',
+  initialTemplateStyle = 'minimal',
   brandName = 'Your Brand'
 }: SmartPreviewProps) => {
   const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [currentStyle, setCurrentStyle] = useState(initialTemplateStyle);
 
   const handleDownload = () => {
     const fileName = `${brandName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}_${subject.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.html`;
@@ -48,7 +49,7 @@ const SmartPreview = ({
     ctaLink || null,
     includeCTA,
     false, // Don't include watermark in smart preview
-    templateStyle
+    currentStyle
   );
 
   return (
@@ -98,6 +99,20 @@ const SmartPreview = ({
               <Moon className="w-4 h-4 text-muted-foreground" />
             </div>
 
+            <div className="flex items-center gap-2 bg-muted/30 p-1.5 rounded-md">
+              <span className="text-xs font-medium text-muted-foreground px-1">Style:</span>
+              <select
+                value={currentStyle}
+                onChange={(e) => setCurrentStyle(e.target.value as any)}
+                className="bg-background border border-input rounded text-xs px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                <option value="minimal">Minimal</option>
+                <option value="bold">Bold</option>
+                <option value="tech">Tech</option>
+                <option value="corporate">Corporate</option>
+              </select>
+            </div>
+
             <Button onClick={handleDownload} className="glow ml-auto">
               <Download className="w-4 h-4 mr-2" />
               Download HTML
@@ -106,7 +121,7 @@ const SmartPreview = ({
 
           {/* Inbox Preview Wrapper */}
           <motion.div
-            key={`${device}-${theme}-${templateStyle}`}
+            key={`${device}-${theme}-${currentStyle}`}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className={`rounded-lg border overflow-hidden ${theme === 'dark'
@@ -156,9 +171,9 @@ const SmartPreview = ({
             <div className="bg-muted/30 rounded-lg p-4">
               <p className="font-semibold mb-2">Preview Tips:</p>
               <ul className="space-y-1 text-muted-foreground">
-                <li>• Current Style: <span className="text-primary font-bold uppercase">{templateStyle}</span></li>
+                <li>• Current Style: <span className="text-primary font-bold uppercase">{currentStyle}</span></li>
                 <li>• Subject line length: {subject.length} characters (optimal: 40-60)</li>
-                <li>• Switch between styles in the main view to see real-time updates</li>
+                <li>• Real-time Style: Switch options above to instantly re-theme this email.</li>
               </ul>
             </div>
             <div className="bg-green-500/5 border border-green-500/20 rounded-lg p-4 flex items-start gap-3">
