@@ -49,6 +49,7 @@ const CreateCampaign = () => {
   const [customDays, setCustomDays] = useState("");
   const [customEmails, setCustomEmails] = useState("");
   const [brandGuidelinesFile, setBrandGuidelinesFile] = useState<File | null>(null);
+  const [templateStyle, setTemplateStyle] = useState('minimal');
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [showOutOfCreditsModal, setShowOutOfCreditsModal] = useState(false);
 
@@ -380,264 +381,191 @@ const CreateCampaign = () => {
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="template-style" className="text-base font-medium">What's the vibe?</Label>
-                <div className="grid grid-cols-2 gap-4 mt-2">
-                  <div
-                    className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${templateStyle === 'minimal' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
-                    onClick={() => setTemplateStyle('minimal')}
-                  >
-                    <div className="font-semibold mb-1">Authentic / Minimal</div>
-                    <div className="text-xs text-muted-foreground">Clean, raw, human. No fluff.</div>
+              {dripDuration === "custom" && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="custom-days" className="text-base">Number of Days</Label>
+                    <Input
+                      id="custom-days"
+                      type="number"
+                      min="1"
+                      max="90"
+                      value={customDays}
+                      onChange={(e) => setCustomDays(e.target.value)}
+                      placeholder="14"
+                      required
+                      className="mt-2 h-12"
+                    />
+                    <p className="text-sm text-muted-foreground mt-2">
+                      1-90 days
+                    </p>
                   </div>
-                  <div
-                    className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${templateStyle === 'bold' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
-                    onClick={() => setTemplateStyle('bold')}
-                  >
-                    <div className="font-semibold mb-1">Bold / Loud</div>
-                    <div className="text-xs text-muted-foreground">High energy, punchy sentences.</div>
-                  </div>
-                  <div
-                    className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${templateStyle === 'corporate' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
-                    onClick={() => setTemplateStyle('corporate')}
-                  >
-                    <div className="font-semibold mb-1">Professional</div>
-                    <div className="text-xs text-muted-foreground">Polished, respectful, advisory.</div>
-                  </div>
-                  <div
-                    className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${templateStyle === 'tech' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
-                    onClick={() => setTemplateStyle('tech')}
-                  >
-                    <div className="font-semibold mb-1">Tech / Analytical</div>
-                    <div className="text-xs text-muted-foreground">Data-driven, precise, logical.</div>
+                  <div>
+                    <Label htmlFor="custom-emails" className="text-base">Number of Emails</Label>
+                    <Input
+                      id="custom-emails"
+                      type="number"
+                      min="1"
+                      max="30"
+                      value={customEmails}
+                      onChange={(e) => setCustomEmails(e.target.value)}
+                      placeholder="7"
+                      required
+                      className="mt-2 h-12"
+                    />
+                    <p className="text-sm text-muted-foreground mt-2">
+                      1-30 emails
+                    </p>
                   </div>
                 </div>
-              </div>
-
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="template-style" className="text-base font-medium">What's the vibe?</Label>
-            <div className="grid grid-cols-2 gap-4 mt-2">
-              <div
-                className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${templateStyle === 'minimal' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
-                onClick={() => setTemplateStyle('minimal')}
-              >
-                <div className="font-semibold mb-1">Authentic / Minimal</div>
-                <div className="text-xs text-muted-foreground">Clean, raw, human. No fluff.</div>
-              </div>
-              <div
-                className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${templateStyle === 'bold' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
-                onClick={() => setTemplateStyle('bold')}
-              >
-                <div className="font-semibold mb-1">Bold / Loud</div>
-                <div className="text-xs text-muted-foreground">High energy, punchy sentences.</div>
-              </div>
-              <div
-                className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${templateStyle === 'corporate' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
-                onClick={() => setTemplateStyle('corporate')}
-              >
-                <div className="font-semibold mb-1">Professional</div>
-                <div className="text-xs text-muted-foreground">Polished, respectful, advisory.</div>
-              </div>
-              <div
-                className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${templateStyle === 'tech' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
-                onClick={() => setTemplateStyle('tech')}
-              >
-                <div className="font-semibold mb-1">Tech / Analytical</div>
-                <div className="text-xs text-muted-foreground">Data-driven, precise, logical.</div>
-              </div>
-            </div>
-          </div>
-
-          {dripDuration === "custom" && (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="custom-days" className="text-base">Number of Days</Label>
-                <Input
-                  id="custom-days"
-                  type="number"
-                  min="1"
-                  max="90"
-                  value={customDays}
-                  onChange={(e) => setCustomDays(e.target.value)}
-                  placeholder="14"
-                  required
-                  className="mt-2 h-12"
-                />
-                <p className="text-sm text-muted-foreground mt-2">
-                  1-90 days
-                </p>
-              </div>
-              <div>
-                <Label htmlFor="custom-emails" className="text-base">Number of Emails</Label>
-                <Input
-                  id="custom-emails"
-                  type="number"
-                  min="1"
-                  max="30"
-                  value={customEmails}
-                  onChange={(e) => setCustomEmails(e.target.value)}
-                  placeholder="7"
-                  required
-                  className="mt-2 h-12"
-                />
-                <p className="text-sm text-muted-foreground mt-2">
-                  1-30 emails
-                </p>
-              </div>
-            </div>
-          )}
-
-          <div>
-            <Label htmlFor="words-per-email" className="text-base font-medium">Email length (words)</Label>
-            <Input
-              id="words-per-email"
-              type="number"
-              min="50"
-              max="500"
-              value={wordsPerEmail}
-              onChange={(e) => setWordsPerEmail(e.target.value)}
-              placeholder="250"
-              required
-              className="mt-2 h-12"
-            />
-            <p className="text-sm text-muted-foreground mt-2">
-              Between 50-500 words
-            </p>
-          </div>
-
-          {/* Advanced Options Collapsible */}
-          <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
-            <CollapsibleTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full flex items-center justify-between p-4 hover:bg-muted/50"
-              >
-                <span className="text-base font-medium">Advanced Options</span>
-                <ChevronDown className={`w-5 h-5 transition-transform ${advancedOpen ? 'rotate-180' : ''}`} />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-4 space-y-4">
-              <div>
-                <Label htmlFor="brand-guidelines" className="text-base">
-                  Upload Brand Guidelines (Optional)
-                </Label>
-                <div className="mt-2">
-                  <Input
-                    id="brand-guidelines"
-                    type="file"
-                    accept=".pdf,.doc,.docx,.txt"
-                    onChange={(e) => setBrandGuidelinesFile(e.target.files?.[0] || null)}
-                    className="h-12 cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-                  />
-                  <p className="text-sm text-muted-foreground mt-2">
-                    {brandGuidelinesFile
-                      ? `Selected: ${brandGuidelinesFile.name}`
-                      : "PDF, DOC, DOCX, or TXT format"}
-                  </p>
-                </div>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="include-cta"
-                checked={includeCTA}
-                onCheckedChange={(checked) => setIncludeCTA(checked as boolean)}
-              />
-              <Label htmlFor="include-cta" className="text-base cursor-pointer">
-                Include Call-to-Action (CTA) in emails
-              </Label>
-            </div>
-
-            {includeCTA && (
-              <div>
-                <Label htmlFor="cta-link" className="text-base">CTA Link (Optional)</Label>
-                <Input
-                  id="cta-link"
-                  type="url"
-                  value={ctaLink}
-                  onChange={(e) => setCtaLink(e.target.value)}
-                  placeholder="https://example.com/signup"
-                  className="mt-2 h-12"
-                />
-                <p className="text-sm text-muted-foreground mt-2">
-                  {ctaLink ? "CTA will be a clickable button" : "Without a link, CTA will be text only"}
-                </p>
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Button
-              type="submit"
-              className="flex-1 btn-premium shadow-lg hover-lift h-12 text-base"
-              disabled={loading}
-              onClick={() => trackButtonClick('Generate Campaign', '/create-campaign')}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Building your sequence...
-                </>
-              ) : (
-                "Generate my emails"
               )}
-            </Button>
-            {dripDuration && (
-              <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20 whitespace-nowrap">
-                <Gem className="w-4 h-4 text-primary" />
-                <span className="text-sm font-semibold">
-                  {getEmailCount(dripDuration, parseInt(customEmails))}
-                </span>
+
+              <div>
+                <Label htmlFor="words-per-email" className="text-base font-medium">Email length (words)</Label>
+                <Input
+                  id="words-per-email"
+                  type="number"
+                  min="50"
+                  max="500"
+                  value={wordsPerEmail}
+                  onChange={(e) => setWordsPerEmail(e.target.value)}
+                  placeholder="250"
+                  required
+                  className="mt-2 h-12"
+                />
+                <p className="text-sm text-muted-foreground mt-2">
+                  Between 50-500 words
+                </p>
               </div>
-            )}
+
+              {/* Advanced Options Collapsible */}
+              <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+                <CollapsibleTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full flex items-center justify-between p-4 hover:bg-muted/50"
+                  >
+                    <span className="text-base font-medium">Advanced Options</span>
+                    <ChevronDown className={`w-5 h-5 transition-transform ${advancedOpen ? 'rotate-180' : ''}`} />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-4 space-y-4">
+                  <div>
+                    <Label htmlFor="brand-guidelines" className="text-base">
+                      Upload Brand Guidelines (Optional)
+                    </Label>
+                    <div className="mt-2">
+                      <Input
+                        id="brand-guidelines"
+                        type="file"
+                        accept=".pdf,.doc,.docx,.txt"
+                        onChange={(e) => setBrandGuidelinesFile(e.target.files?.[0] || null)}
+                        className="h-12 cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                      />
+                      <p className="text-sm text-muted-foreground mt-2">
+                        {brandGuidelinesFile
+                          ? `Selected: ${brandGuidelinesFile.name}`
+                          : "PDF, DOC, DOCX, or TXT format"}
+                      </p>
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="include-cta"
+                    checked={includeCTA}
+                    onCheckedChange={(checked) => setIncludeCTA(checked as boolean)}
+                  />
+                  <Label htmlFor="include-cta" className="text-base cursor-pointer">
+                    Include Call-to-Action (CTA) in emails
+                  </Label>
+                </div>
+
+                {includeCTA && (
+                  <div>
+                    <Label htmlFor="cta-link" className="text-base">CTA Link (Optional)</Label>
+                    <Input
+                      id="cta-link"
+                      type="url"
+                      value={ctaLink}
+                      onChange={(e) => setCtaLink(e.target.value)}
+                      placeholder="https://example.com/signup"
+                      className="mt-2 h-12"
+                    />
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {ctaLink ? "CTA will be a clickable button" : "Without a link, CTA will be text only"}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Button
+                  type="submit"
+                  className="flex-1 btn-premium shadow-lg hover-lift h-12 text-base"
+                  disabled={loading}
+                  onClick={() => trackButtonClick('Generate Campaign', '/create-campaign')}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Building your sequence...
+                    </>
+                  ) : (
+                    "Generate my emails"
+                  )}
+                </Button>
+                {dripDuration && (
+                  <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20 whitespace-nowrap">
+                    <Gem className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-semibold">
+                      {getEmailCount(dripDuration, parseInt(customEmails))}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </form>
+          </Card>
+
+          <div className="grid md:grid-cols-3 gap-4 mt-8">
+            {[
+              { icon: LinkIcon, title: "Scan", desc: "We read your landing page" },
+              { icon: FileText, title: "Write", desc: "Generate campaign in 30s" },
+              { icon: Download, title: "Ship", desc: "Export HTML, send emails" }
+            ].map((step, i) => (
+              <motion.div
+                key={step.title}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.2 + i * 0.1 }}
+                className="flex items-start gap-3 p-4 rounded-lg bg-card/50"
+              >
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <step.icon className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-sm mb-0.5">{step.title}</h4>
+                  <p className="text-xs text-muted-foreground">{step.desc}</p>
+                </div>
+              </motion.div>
+            ))}
           </div>
-        </form>
-      </Card>
+        </motion.div>
 
-      <div className="grid md:grid-cols-3 gap-4 mt-8">
-        {[
-          { icon: LinkIcon, title: "Scan", desc: "We read your landing page" },
-          { icon: FileText, title: "Write", desc: "Generate campaign in 30s" },
-          { icon: Download, title: "Ship", desc: "Export HTML, send emails" }
-        ].map((step, i) => (
-          <motion.div
-            key={step.title}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 + i * 0.1 }}
-            className="flex items-start gap-3 p-4 rounded-lg bg-card/50"
-          >
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <step.icon className="w-4 h-4 text-primary" />
-            </div>
-            <div>
-              <h4 className="font-medium text-sm mb-0.5">{step.title}</h4>
-              <p className="text-xs text-muted-foreground">{step.desc}</p>
-            </div>
-          </motion.div>
-        ))}
+        {/* Out of Credits Modal */}
+        {userId && (
+          <OutOfCreditsModal
+            open={showOutOfCreditsModal}
+            onClose={() => setShowOutOfCreditsModal(false)}
+            userId={userId}
+          />
+        )}
       </div>
-    </motion.div>
-
-        {/* Out of Credits Modal */ }
-  {
-    userId && (
-      <OutOfCreditsModal
-        open={showOutOfCreditsModal}
-        onClose={() => setShowOutOfCreditsModal(false)}
-        userId={userId}
-      />
-    )
-  }
-      </div >
-    </div >
+    </div>
   );
 };
 
