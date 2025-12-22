@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Eye, Trash2, ExternalLink, Loader2 } from "lucide-react";
+import { Eye, Trash2, ExternalLink, Loader2, RefreshCcw } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,

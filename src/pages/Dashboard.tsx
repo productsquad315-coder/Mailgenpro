@@ -92,6 +92,26 @@ const Dashboard = () => {
     }
   };
 
+  // Auto-recovery mechanism for 0 credits
+  useEffect(() => {
+    if (creditsRemaining <= 0 && user && !loading) {
+      console.log("Credits at 0, attempting auto-recovery...");
+      const recover = async () => {
+        const { data, error } = await supabase.rpc('recover_my_credits');
+        if (!error && (data as any)?.recovered) {
+          console.log("Credits recovered:", data);
+          toast.success("We topped up your test credits!", {
+            description: "You're ready to generate campaigns."
+          });
+          fetchCredits(user.id);
+        } else {
+          if (error) console.error("Recovery failed:", error);
+        }
+      };
+      recover();
+    }
+  }, [creditsRemaining, user, loading]);
+
   if (loading || !user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">

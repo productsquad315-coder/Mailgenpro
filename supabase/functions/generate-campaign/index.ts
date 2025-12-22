@@ -423,18 +423,33 @@ serve(async (req) => {
     else if (dripDuration.startsWith("custom-")) {
       // Parse custom format: "custom-[days]-[emails]"
       const parts = dripDuration.split("-");
-      if (parts.length === 3) {
-        numEmails = parseInt(parts[2]);
+      if (parts.length >= 3) {
+        const parsedEmails = parseInt(parts[2]);
+        if (!isNaN(parsedEmails) && parsedEmails > 0) {
+          numEmails = parsedEmails;
+        }
       }
     }
 
-    // Build Constraints
-    let ctaConstraint = "";
+    // Build Critical Constraints
+    const constraints: string[] = [];
+
+    // 1. Quantity Constraint
+    constraints.push(`CRITICAL: You MUST generate EXACTLY ${numEmails} emails. No more, no less.`);
+
+    // 2. Length Constraint
+    const minWords = Math.floor(wordsPerEmail * 0.9);
+    const maxWords = Math.ceil(wordsPerEmail * 1.1);
+    constraints.push(`CRITICAL: Each email body MUST be between ${minWords} - ${maxWords} words. Do not write short emails.`);
+
+    // 3. CTA Constraint
     if (campaignDetails?.include_cta && campaignDetails?.cta_link) {
-      ctaConstraint = `MANDATORY CONSTRAINT: Every single email MUST end with a clear Call To Action using this link: ${campaignDetails.cta_link}.`;
+      constraints.push(`MANDATORY: Every single email MUST end with a clear Call To Action using this link: ${campaignDetails.cta_link}.`);
     } else if (campaignDetails?.include_cta) {
-      ctaConstraint = `MANDATORY CONSTRAINT: Every email MUST end with a clear Call To Action (placeholder [LINK]).`;
+      constraints.push(`MANDATORY: Every email MUST end with a clear Call To Action (placeholder [LINK]).`);
     }
+
+    const ctaConstraint = constraints.map(c => `- ${c}`).join("\n");
 
     const systemPrompt = `YOU ARE THE "GOD-TIER" DIRECT RESPONSE EMAIL STRATEGIST.
 You are a composite intelligence of the world's greatest copywriters (Eugene Schwartz, Gary Halbert, David Ogilvy, and Clayton Makepeace).
@@ -523,7 +538,8 @@ REQUIRED INTERNAL ANALYSIS (Do this before writing):
 4. THE "HOOK": What is the one counter-intuitive fact that grabs attention?
 
 === PHASE 2: SEQUENCE CONSTRUCTION ===
-Generate a ${numEmails}-email sequence. Target ${wordsPerEmail} words per email (+/- 10%).
+GENERATE EXACTLY ${numEmails} EMAILS.
+STRICT ADHERENCE TO CRITICAL CONSTRAINTS REQUIRED.
 
 STRUCTURE THE EMAILS AS FOLLOWS:
 
