@@ -152,7 +152,12 @@ const CampaignsList = ({ userId }: CampaignsListProps) => {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-2xl font-bold tracking-tight">Campaigns</h2>
-        <span className="text-sm text-muted-foreground">{campaigns.length} total</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">{campaigns.length} total</span>
+          <Button variant="ghost" size="icon" onClick={() => window.location.reload()} title="Reload Data">
+            <RefreshCcw className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
         {campaigns.map((campaign, i) => (

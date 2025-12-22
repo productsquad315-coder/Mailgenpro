@@ -178,19 +178,282 @@ serve(async (req) => {
     // Generate emails
     const { data: campaignDetails } = await serviceClient
       .from("campaigns")
-      .select("drip_duration, words_per_email, include_cta, cta_link")
+      .select("name, drip_duration, words_per_email, include_cta, cta_link, analyzed_data")
       .eq("id", campaignId)
       .single();
 
     let numEmails = 4;
     const wordsPerEmail = campaignDetails?.words_per_email || 250;
+    const dripDuration = campaignDetails?.drip_duration || "7-day";
+    // Read template style from JSONB column to avoid safe schema migration issues
+    const templateStyle = campaignDetails?.analyzed_data?.template_style || "minimal";
 
-    if (campaignDetails?.drip_duration === "14-day") numEmails = 7;
-    else if (campaignDetails?.drip_duration === "30-day") numEmails = 12;
+    // Style-Specific Strategy Overrides
+    const styleInstructions = {
+      minimal: "Tone: Pure, raw authenticity. No visual distractions. Focus 100% on the text.",
+      bold: "Tone: Confident, loud, and authoritative. Use punchy short sentences.",
+      tech: "Tone: Precise, data-driven, and analytical. Use bullet points and logic.",
+      corporate: "Tone: Professional, polished, and respectful. Use complete sentences and 'advisory' formality."
+    };
+
+    const selectedStyleInstruction = styleInstructions[templateStyle as keyof typeof styleInstructions] || styleInstructions.minimal;
+
+    // === GOD-TIER PSYCHOLOGY MAP (10 CORE FLOWS) ===
+    interface Strategy {
+      emotion: string;
+      arc: string;
+      instructions: string;
+    }
+
+    const sequenceStrategyMap: Record<string, Strategy> = {
+      // 1. WELCOME SERIES
+      "welcome": {
+        emotion: "RECIPROCITY & IDENTITY",
+        arc: "Identify user -> Give Value -> Soft Ask",
+        instructions: `
+            STRATEGY: THE "INNER CIRCLE" FRAME
+            - Email 1: The "Anti-Welcome". Do not say "Thanks for signing up". Say "You're in." Establish the Brand Enemy immediately.
+            - Email 2: The "Origin Story". Why was this company born? What injustice are we fighting?
+            - Email 3: The "Soft Offer". Present products not as items, but as tools for the new identity.
+            `
+      },
+      // 2. ABANDONED CART
+      "abandoned-cart": {
+        emotion: "LOSS AVERSION",
+        arc: "Reminder -> Objection Handling -> Scarcity",
+        instructions: `
+            STRATEGY: THE "TAKEAWAY" FRAME
+            - Never beg. Assumed the item is already theirs and they are about to LOSE it.
+            - Email 1: "Did life get in the way?" (Helpful, low pressure).
+            - Email 2: "Holding your items." (Implicit social pressure/scarcity).
+            - Email 3: "Releasing inventory." (High pressure, fear of loss).
+            `
+      },
+      // 3. BROWSE ABANDONMENT
+      "browse-abandonment": {
+        emotion: "CURIOSITY",
+        arc: "Observation -> Feature Highlight -> Social Proof",
+        instructions: `
+            STRATEGY: THE "OBSERVANT FRIEND" FRAME
+            - Do not sound like a stalker. Sound like a helpful shop assistant.
+            - Email 1: "Saw you looking..." (Casual inquiry).
+            - Email 2: "Did you miss this detail?" (Highlight a specific unique mechanism of the product viewed).
+            - Email 3: "What others are saying." (Social proof to validate the interest).
+            `
+      },
+      // 4. CHECKOUT ABANDONMENT
+      "checkout-abandonment": {
+        emotion: "URGENCY & SERVICE",
+        arc: "Technical Check -> Scarcity -> Final Call",
+        instructions: `
+            STRATEGY: THE "ASSISTANT" FRAME
+            - Assume a technical failure, not a lack of interest.
+            - Email 1: "Was there a glitch?" (High service).
+            - Email 2: "Your cart is expiring." (Scarcity).
+            - Email 3: "Last chance before restock." (Fear of missing out).
+            `
+      },
+      // 5. POST-PURCHASE
+      "post-purchase": {
+        emotion: "CONFIRMATION & EXCITEMENT",
+        arc: "Celebration -> Pacing -> Expansion",
+        instructions: `
+            STRATEGY: THE "VICTORY LAP" FRAME
+            - Eliminate Buyer's Remorse immediately.
+            - Email 1: "Great choice." (Validate their decision).
+            - Email 2: "What to expect." (Future pacing the arrival).
+            - Email 3: "The perfect pair." (Soft cross-sell ONLY if appropriate).
+            `
+      },
+      // 6. REVIEW REQUEST
+      "review-request": {
+        emotion: "STATUS & ALTRUISM",
+        arc: "Check-in -> The Ask -> The Reward",
+        instructions: `
+            STRATEGY: THE "JUDGE" FRAME
+            - Frame the review not as a favor to you, but as power for them.
+            - Email 1: "How is it?" (Genuine care, no ask yet).
+            - Email 2: "Your opinion shapes us." (The Ask - Appeal to status/impact).
+            - Email 3: "A token of thanks." (Incentive for the review).
+            `
+      },
+      // 7. UPSELL / CROSS-SELL
+      "upsell": {
+        emotion: "LOGIC & MOMENTUM",
+        arc: "Logic Bridge -> The Gap -> The Fix",
+        instructions: `
+            STRATEGY: THE "COMPLETION" FRAME
+            - You are helping them finish the set.
+            - Email 1: "You have X, but do you have Y?" (Open the loop).
+            - Email 2: "Why X needs Y." (Scientific/Logical explanation).
+            - Email 3: "The bundle offer." (Discount for completion).
+            `
+      },
+      // 8. WIN-BACK
+      "win-back": {
+        emotion: "NOSTALGIA",
+        arc: "Remind -> Update -> Offer",
+        instructions: `
+            STRATEGY: THE "OLD FRIEND" FRAME
+            - "It's been a while."
+            - Email 1: "Remember us?" (Nostalgia).
+            - Email 2: "We've changed." (Show new improvements/products).
+            - Email 3: "Are we over?" (The breakup email - Psychology of loss).
+            `
+      },
+      // 9. VIP / LOYALTY
+      "vip": {
+        emotion: "EXCLUSIVITY",
+        arc: "Recognition -> Access -> Reward",
+        instructions: `
+            STRATEGY: THE "VELVET ROPE" FRAME
+            - You are not selling; you are inviting.
+            - Email 1: "You're in the top 1%." (Status elevation).
+            - Email 2: "Secret menu." (Exclusive access).
+            - Email 3: "Early access." (Reward behaviour).
+            `
+      },
+      // 10. BACK IN STOCK / PRICE DROP
+      "back-in-stock": {
+        emotion: "SCARCITY",
+        arc: "Alert -> Scarcity -> Gone",
+        instructions: `
+            STRATEGY: THE "FLASH" FRAME
+            - High energy, low word count.
+            - Email 1: "It's back." (Simple notification).
+            - Email 2: "Moving fast." (Social proof/Scarcity).
+            - Email 3: "Almost gone again." (Urgency).
+            `
+      },
+      // --- FOUNDER FLOWS ---
+      "trial-upgrade": {
+        emotion: "URGENCY & VALUE GAP",
+        arc: "Value Remind -> The Gap -> The Cliff",
+        instructions: `
+            STRATEGY: THE "CLOCK IS TICKING" FRAME
+            - Email 1: "You've achieved X." (Validate progress).
+            - Email 2: "What you will lose." (Loss aversion - losing access to data/features).
+            - Email 3: "The easy transition." (Remove friction to upgrade).
+            `
+      },
+      "feature-announcement": {
+        emotion: "EXCITEMENT & UTILITY",
+        arc: "The Problem -> The Soluton -> Use Case",
+        instructions: `
+            STRATEGY: THE "SUPERPOWER" FRAME
+            - Email 1: "We fixed [Pain Point]." (Don't start with 'New Feature', start with the pain it solves).
+            - Email 2: "How it works." (Show, don't just tell).
+            - Email 3: "Log in to try." (Direct call to action).
+            `
+      },
+      "churn-recovery": {
+        emotion: "EMPATHY & CURIOSITY",
+        arc: "The Question -> The Change -> The Invite",
+        instructions: `
+            STRATEGY: THE "LISTENING EAR" FRAME
+            - Email 1: "Was it us?" (Genuine feedback request, low friction).
+            - Email 2: "We've improved X." (Address common objections).
+            - Email 3: "Come back on us." (Incentive).
+         `
+      },
+      "educational-nurture": {
+        emotion: "AUTHORITY & HELPFULNESS",
+        arc: "Concept -> Tactic -> Case Study",
+        instructions: `
+             STRATEGY: THE "MENTOR" FRAME
+             - Email 1: "The Strategy." (High level concept).
+             - Email 2: "The Tactic." (How to do it).
+             - Email 3: "The Proof." (How others did it).
+         `
+      },
+      "customer-success": {
+        emotion: "ENABLEMENT",
+        arc: "Blocker Removal -> Quick Win -> Advanced Tip",
+        instructions: `
+            STRATEGY: THE "GUIDE" FRAME
+            - Email 1: "Stuck?" (Anticipate friction).
+            - Email 2: "Try this." (Actionable tip).
+            - Email 3: "Pro tip." (Unlock advanced value).
+        `
+      },
+      "founder-story": {
+        emotion: "VULNERABILITY & VISION",
+        arc: "The Struggle -> The Epiphany -> The Mission",
+        instructions: `
+            STRATEGY: THE "ORIGIN" FRAME
+            - Email 1: "Why I started this." (Personal story).
+            - Email 2: "The moment everything changed." (The 'Aha' moment).
+            - Email 3: "Join the mission." (Invitation to be part of something bigger).
+         `
+      },
+      "newsletter": {
+        emotion: "CONSISTENCY & VALUE",
+        arc: "News -> Insight -> Action",
+        instructions: `
+            STRATEGY: THE "PULSE" FRAME
+            - Email 1: "This week's big insight."
+            - Email 2: "Curated resources."
+            - Email 3: "Thought of the week."
+         `
+      }
+    };
+
+    // --- NORMALIZATION LAYER ---
+    // Map frontend keys (from sequenceTypes.ts) to backend keys
+    const frontendToBackendMap: Record<string, string> = {
+      "re-engagement": "win-back",
+      "vip-loyalty": "vip",
+      "welcome-onboarding": "welcome",
+      "expansion-upgrade": "upsell",
+      "activation": "customer-success"
+      // Others map 1:1 or defaults
+    };
+
+    let campaignSequenceType = campaignDetails?.sequence_type || "welcome";
+    // Normalize type
+    if (frontendToBackendMap[campaignSequenceType]) {
+      campaignSequenceType = frontendToBackendMap[campaignSequenceType];
+    }
+
+    const selectedStrategy = sequenceStrategyMap[campaignSequenceType] || sequenceStrategyMap["welcome"];
+
+
+    if (dripDuration === "14-day") numEmails = 7;
+    else if (dripDuration === "30-day") numEmails = 12;
+    else if (dripDuration.startsWith("custom-")) {
+      // Parse custom format: "custom-[days]-[emails]"
+      const parts = dripDuration.split("-");
+      if (parts.length === 3) {
+        numEmails = parseInt(parts[2]);
+      }
+    }
+
+    // Build Constraints
+    let ctaConstraint = "";
+    if (campaignDetails?.include_cta && campaignDetails?.cta_link) {
+      ctaConstraint = `MANDATORY CONSTRAINT: Every single email MUST end with a clear Call To Action using this link: ${campaignDetails.cta_link}.`;
+    } else if (campaignDetails?.include_cta) {
+      ctaConstraint = `MANDATORY CONSTRAINT: Every email MUST end with a clear Call To Action (placeholder [LINK]).`;
+    }
 
     const systemPrompt = `YOU ARE THE "GOD-TIER" DIRECT RESPONSE EMAIL STRATEGIST.
 You are a composite intelligence of the world's greatest copywriters (Eugene Schwartz, Gary Halbert, David Ogilvy, and Clayton Makepeace).
 Your goal is to write email sequences that are INDISTINGUISHABLE from top-tier human copywriters.
+
+=== CAMPAIGN CONTEXT: ${campaignDetails?.name || "Unnamed Campaign"} ===
+Use this name to frame the specific angle or product focus if relevant.
+
+=== VISUAL STYLE ALIGNMENT: ${templateStyle.toUpperCase()} ===
+${selectedStyleInstruction}
+
+=== STRATEGIC OBJECTIVE: ${selectedStrategy.emotion} ===
+SEQUENCE TYPE: ${campaignSequenceType.toUpperCase()}
+ARC: ${selectedStrategy.arc}
+
+${selectedStrategy.instructions}
+
+=== CRITICAL CONSTRAINTS ===
+${ctaConstraint}
 
 === THE "GOD-MODE" STRATEGY CORE ===
 
