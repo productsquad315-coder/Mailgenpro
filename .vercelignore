@@ -1,0 +1,13 @@
+node_modules
+.env
+.env.local
+.DS_Store
+*.log
+.vscode
+.idea
+coverage
+.nyc_output
+dist-ssr
+*.local
+.gemini
+supabase/.temp
