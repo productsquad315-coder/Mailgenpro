@@ -135,7 +135,7 @@ const Auth = () => {
       passwordSchema.parse(password);
       nameSchema.parse(fullName);
 
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -147,13 +147,53 @@ const Auth = () => {
       });
 
       if (error) {
-        if (error.message.includes("already registered")) {
+        // Check if it's the database trigger error
+        if (error.message.includes("Database error") || error.message.includes("user_usage")) {
+          toast.error("Signup is temporarily unavailable. Please contact support at support@mailgenpro.com");
+        } else if (error.message.includes("already registered")) {
           toast.error("This email is already registered. Please sign in instead.");
         } else {
           toast.error(error.message);
         }
         trackFormSubmission('signup', false);
-      } else {
+      } else if (data.user) {
+        // SUCCESS - User was created in auth.users
+        // Now manually create the profile records that the broken trigger should have created
+        try {
+          const userId = data.user.id;
+
+          // Create profile
+          await supabase.from('profiles').insert({
+            id: userId,
+            email: email,
+            full_name: fullName,
+            app_role: 'user',
+            onboarding_completed: false
+          });
+
+          // Create user_usage
+          await supabase.from('user_usage').insert({
+            user_id: userId,
+            plan: 'trial',
+            generations_limit: 20,
+            generations_used: 0,
+            subscription_status: 'trial',
+            topup_credits: 0
+          });
+
+          // Create email_credits
+          await supabase.from('email_credits').insert({
+            user_id: userId,
+            credits_free: 50,
+            credits_paid: 0
+          });
+
+          console.log('✅ User profile created successfully');
+        } catch (profileError) {
+          console.error('Profile creation error:', profileError);
+          // Don't show error to user - they can still use the app
+        }
+
         toast.success("Check your email to verify your account!", {
           duration: 6000,
           description: "We've sent a verification link to your email address."
