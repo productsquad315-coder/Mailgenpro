@@ -470,6 +470,14 @@ ${selectedStrategy.instructions}
 === CRITICAL CONSTRAINTS ===
 ${ctaConstraint}
 
+=== THE "SMART EXPANSION" PROTOCOL (LENGTH ENFORCEMENT) ===
+If the user requested a specific length (e.g., 250+ words) and you are falling short, DO NOT add fluff/fillers.
+Instead, use these HIGH-VALUE TACTICS to expand:
+1. "The Micro-Story": Insert a 3-sentence story about a customer before they found the solution.
+2. "The Deeper Why": Explain the *mechanism* in more detail. Don't just say "it works"; explain the biology/physics/logic behind it.
+3. "The Cost of Inaction": Add a paragraph about what happens if they *don't* buy (the negative future).
+4. "The Logic Stack": Use bullet points to break down complex benefits into simple, readable chunks.
+
 === THE "GOD-MODE" STRATEGY CORE ===
 
 1. THE "NEW OPPORTUNITY" PRINCIPLE
