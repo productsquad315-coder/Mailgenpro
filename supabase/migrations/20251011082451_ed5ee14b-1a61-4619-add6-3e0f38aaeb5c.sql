@@ -69,14 +69,11 @@ CREATE TABLE public.user_usage (
 
 ALTER TABLE public.user_usage ENABLE ROW LEVEL SECURITY;
 
+
 -- User usage policies
 CREATE POLICY "Users can view their own usage"
   ON public.user_usage FOR SELECT
   USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert their own usage"
-  ON public.user_usage FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
 
 -- Create campaigns table
 CREATE TABLE public.campaigns (

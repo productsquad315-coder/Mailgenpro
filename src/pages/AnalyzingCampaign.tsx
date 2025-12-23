@@ -152,13 +152,8 @@ const AnalyzingCampaign = () => {
           throw new Error(friendly);
         }
 
-        // Update usage only if user is authenticated (not a guest)
-        if (campaign.user_id) {
-          await supabase.rpc("increment_user_generations", {
-            user_id: campaign.user_id,
-          });
-        } else {
-          // If it's a guest, we mark it in localStorage so the Auth page can claim it
+        // For guests, we mark it in localStorage so the Auth page can claim it
+        if (!campaign.user_id) {
           localStorage.setItem("guestCampaignId", id);
         }
 
