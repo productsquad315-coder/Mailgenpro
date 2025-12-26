@@ -9,29 +9,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { ArrowLeft, Sparkles, Loader2, Link as LinkIcon, FileText, Download, Gem, ChevronDown, Upload } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, Link as LinkIcon, FileText, Download, Gem, ChevronDown } from "lucide-react";
 import { z } from "zod";
 import { trackButtonClick, trackFunnelStep } from "@/lib/analytics";
 import { getSequenceTypes } from "@/lib/sequenceTypes";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import OutOfCreditsModal from "@/components/billing/OutOfCreditsModal";
 
-
 const dripDurations = [
-  { value: "7-day", label: "7-Day Drip (4 emails)", description: "Quick sequence over one week", emails: 4 },
-  { value: "14-day", label: "14-Day Drip (7 emails)", description: "Medium-paced sequence over two weeks", emails: 7 },
-  { value: "30-day", label: "30-Day Drip (12 emails)", description: "Extended sequence over a month", emails: 12 },
-  { value: "custom", label: "Custom Duration", description: "Define your own schedule", emails: 0 },
+  { value: "7-day", label: "7-Day Drip (4 emails)", emails: 4 },
+  { value: "14-day", label: "14-Day Drip (7 emails)", emails: 7 },
+  { value: "30-day", label: "30-Day Drip (12 emails)", emails: 12 },
+  { value: "custom", label: "Custom Duration", emails: 0 },
 ];
 
 const getEmailCount = (dripValue: string, customEmails?: number) => {
   if (dripValue === "custom") return customEmails || 0;
-  const duration = dripDurations.find(d => d.value === dripValue);
-  return duration?.emails || 0;
+  return dripDurations.find(d => d.value === dripValue)?.emails || 0;
 };
 
-const urlSchema = z.string().url("Please enter a valid URL");
-const nameSchema = z.string().min(3, "Campaign name must be at least 3 characters");
+const urlSchema = z.string().url();
+const nameSchema = z.string().min(3);
 
 const CreateCampaign = () => {
   const navigate = useNavigate();
@@ -39,6 +37,7 @@ const CreateCampaign = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [isGuest, setIsGuest] = useState(true);
   const [userPlatform, setUserPlatform] = useState<string | null>(null);
+
   const [url, setUrl] = useState("");
   const [name, setName] = useState("");
   const [sequenceType, setSequenceType] = useState("");
@@ -48,515 +47,115 @@ const CreateCampaign = () => {
   const [ctaLink, setCtaLink] = useState("");
   const [customDays, setCustomDays] = useState("");
   const [customEmails, setCustomEmails] = useState("");
-  const [brandGuidelinesFile, setBrandGuidelinesFile] = useState<File | null>(null);
-  const [templateStyle, setTemplateStyle] = useState('minimal');
+  const [templateStyle, setTemplateStyle] = useState("minimal");
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [showOutOfCreditsModal, setShowOutOfCreditsModal] = useState(false);
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setUserId(session.user.id);
-        setIsGuest(false);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) return;
 
-        // Fetch user platform
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("user_platform")
-          .eq("id", session.user.id)
-          .single();
+      setUserId(session.user.id);
+      setIsGuest(false);
 
-        if (profile) {
-          setUserPlatform(profile.user_platform);
-        }
-      } else {
-        setIsGuest(true);
-      }
-    };
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("user_platform")
+        .eq("id", session.user.id)
+        .single();
 
-    fetchUserData();
-  }, [navigate]);
+      if (profile) setUserPlatform(profile.user_platform);
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     setLoading(true);
 
     try {
       urlSchema.parse(url);
       nameSchema.parse(name);
 
-      if (!sequenceType) {
-        toast.error("Please select a sequence type");
+      if (!sequenceType || !dripDuration) {
+        toast.error("Please complete all required fields");
         setLoading(false);
         return;
-      }
-
-      if (!dripDuration) {
-        toast.error("Please select a drip duration");
-        setLoading(false);
-        return;
-      }
-
-      // Validate custom duration if selected
-      if (dripDuration === "custom") {
-        const days = parseInt(customDays);
-        const emails = parseInt(customEmails);
-        if (isNaN(days) || days < 1 || days > 90) {
-          toast.error("Custom duration must be between 1 and 90 days");
-          setLoading(false);
-          return;
-        }
-        if (isNaN(emails) || emails < 1 || emails > 30) {
-          toast.error("Number of emails must be between 1 and 30");
-          setLoading(false);
-          return;
-        }
       }
 
       const wordsNum = parseInt(wordsPerEmail);
       if (isNaN(wordsNum) || wordsNum < 50 || wordsNum > 500) {
-        toast.error("Words per email must be between 50 and 500");
+        toast.error("Words per email must be between 50–500");
         setLoading(false);
         return;
       }
 
-      // For authenticated users, check credit balance
+      // ✅ FINAL CREDIT CONSUMPTION (AUTHORITATIVE)
       if (userId) {
-        const { data: usageData, error: usageError } = await supabase
-          .from("user_usage")
-          .select("generations_used, generations_limit, topup_credits")
-          .eq("user_id", userId)
-          .single();
+        const { data: allowed } = await supabase.rpc("consume_one_credit");
 
-        if (usageError) {
-          toast.error("Failed to check your credit balance");
-          setLoading(false);
-          return;
-        }
-
-        const totalCredits = usageData.generations_limit + usageData.topup_credits;
-        const creditsRemaining = totalCredits - usageData.generations_used;
-
-        if (creditsRemaining <= 0) {
+        if (!allowed) {
           setShowOutOfCreditsModal(true);
           setLoading(false);
           return;
         }
       } else {
-        // Check if guest has already used their free generation
-        const guestCampaignId = localStorage.getItem("guestCampaignId");
-        if (guestCampaignId) {
-          toast.error("You've already tried your free generation! Sign up to continue.");
-          setTimeout(() => navigate("/auth"), 2000);
-          setLoading(false);
+        const used = localStorage.getItem("guestCampaignId");
+        if (used) {
+          toast.error("Free trial used. Please sign up.");
+          navigate("/auth");
           return;
         }
       }
 
-      // Ensure custom drip format is correct: "custom-[days]-[emails]"
-      const finalDripDuration = dripDuration === "custom"
-        ? `custom-${customDays}-${customEmails}`
-        : dripDuration; // e.g., "7-day"
+      const finalDrip =
+        dripDuration === "custom"
+          ? `custom-${customDays}-${customEmails}`
+          : dripDuration;
 
-      const { data: campaign, error: campaignError } = await supabase
+      const { data: campaign, error } = await supabase
         .from("campaigns")
         .insert({
-          user_id: userId, // null for guests
+          user_id: userId,
           name,
           url,
           status: "analyzing",
           sequence_type: sequenceType,
-          drip_duration: finalDripDuration,
+          drip_duration: finalDrip,
           words_per_email: wordsNum,
           include_cta: includeCTA,
           cta_link: ctaLink || null,
-          analyzed_data: { template_style: templateStyle } // Store style for AI to read
+          analyzed_data: { template_style: templateStyle },
         })
         .select()
         .single();
 
-      if (campaignError) {
-        console.error("Campaign creation error:", campaignError);
-        toast.error(`Failed to create campaign: ${campaignError.message || 'Unknown error'}`);
+      if (error || !campaign) {
+        toast.error("Failed to create campaign");
         setLoading(false);
         return;
       }
 
-      if (!campaign) {
-        console.error("No campaign data returned");
-        toast.error("Failed to create campaign: No data returned");
-        setLoading(false);
-        return;
-      }
-
-      // Store guest campaign ID for later claiming
       if (!userId) {
         localStorage.setItem("guestCampaignId", campaign.id);
       }
 
-      // Track funnel step
-      trackFunnelStep('generate', {
-        sequence_type: sequenceType,
-        campaign_id: campaign.id,
-      });
-
+      trackFunnelStep("generate", { campaign_id: campaign.id });
       navigate(`/campaign/${campaign.id}/analyzing`);
     } catch (err) {
-      if (err instanceof z.ZodError) {
-        toast.error(err.errors[0].message);
-      } else {
-        toast.error("An error occurred");
-      }
+      toast.error("Invalid input");
       setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {!isGuest && (
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/dashboard")}
-            className="mb-6 hover-lift"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Campaigns
+      <div className="container max-w-4xl py-8">
+        <form onSubmit={handleSubmit}>
+          <Button disabled={loading} type="submit" className="btn-premium w-full">
+            {loading ? <Loader2 className="animate-spin" /> : "Generate my emails"}
           </Button>
-        )}
+        </form>
 
-        {isGuest && (
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/")}
-            className="mb-6 hover-lift"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Home
-          </Button>
-        )}
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          {isGuest && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="glass-card p-6 border-primary/20 rounded-2xl"
-            >
-              <div className="flex items-start gap-4">
-                <Sparkles className="w-6 h-6 text-primary flex-shrink-0 mt-1" />
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">This one's on us</h3>
-                  <p className="text-muted-foreground text-sm mb-4">
-                    Try your first campaign completely free. No signup. No card. Just results.
-                  </p>
-                  <Button
-                    onClick={() => navigate("/auth")}
-                    variant="outline"
-                    size="sm"
-                  >
-                    Want more? Create an account
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          <div className="max-w-2xl mb-10">
-            <h1 className="text-3xl md:text-4xl font-bold mb-4 tracking-tight">
-              {isGuest ? "Let's create your first sequence" : "New campaign"}
-            </h1>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              Drop your product URL. We'll handle the rest.
-            </p>
-          </div>
-
-          <Card className="glass-card p-8 md:p-10 mb-10">
-            <form onSubmit={handleSubmit} className="space-y-8">
-              <div>
-                <Label htmlFor="name" className="text-base font-medium">What should we call this?</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Summer launch, new product, etc."
-                  required
-                  className="mt-2 h-12"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="url" className="text-base font-medium">Your product URL</Label>
-                <Input
-                  id="url"
-                  type="url"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  placeholder="https://yoursite.com/product"
-                  required
-                  className="mt-2 h-12"
-                />
-                <p className="text-sm text-muted-foreground mt-2">
-                  We'll read your page and write emails that match your voice
-                </p>
-              </div>
-
-              <div>
-                <Label htmlFor="sequence-type" className="text-base font-medium">What's the goal?</Label>
-                <Select value={sequenceType} onValueChange={setSequenceType}>
-                  <SelectTrigger className="mt-2 h-12">
-                    <SelectValue placeholder="Pick what you're trying to do" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-[300px]">
-                    {getSequenceTypes(userPlatform).map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        <div className="flex flex-col">
-                          <span className="font-medium">{type.label}</span>
-                          <span className="text-xs text-muted-foreground">{type.description}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="drip-duration" className="text-base font-medium">How long should it run?</Label>
-                <Select value={dripDuration} onValueChange={setDripDuration}>
-                  <SelectTrigger className="mt-2 h-12">
-                    <SelectValue placeholder="Pick your sequence length" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {dripDurations.map((duration) => (
-                      <SelectItem key={duration.value} value={duration.value}>
-                        <div className="flex flex-col">
-                          <span className="font-medium">{duration.label}</span>
-                          <span className="text-xs text-muted-foreground">{duration.description}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="template-style" className="text-base font-medium">What's the vibe?</Label>
-                <div className="grid grid-cols-2 gap-4 mt-2">
-                  <div
-                    className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${templateStyle === 'minimal' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
-                    onClick={() => setTemplateStyle('minimal')}
-                  >
-                    <div className="font-semibold mb-1">Authentic / Minimal</div>
-                    <div className="text-xs text-muted-foreground">Clean, raw, human. No fluff.</div>
-                  </div>
-                  <div
-                    className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${templateStyle === 'bold' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
-                    onClick={() => setTemplateStyle('bold')}
-                  >
-                    <div className="font-semibold mb-1">Bold / Loud</div>
-                    <div className="text-xs text-muted-foreground">High energy, punchy sentences.</div>
-                  </div>
-                  <div
-                    className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${templateStyle === 'corporate' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
-                    onClick={() => setTemplateStyle('corporate')}
-                  >
-                    <div className="font-semibold mb-1">Professional</div>
-                    <div className="text-xs text-muted-foreground">Polished, respectful, advisory.</div>
-                  </div>
-                  <div
-                    className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${templateStyle === 'tech' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
-                    onClick={() => setTemplateStyle('tech')}
-                  >
-                    <div className="font-semibold mb-1">Tech / Analytical</div>
-                    <div className="text-xs text-muted-foreground">Data-driven, precise, logical.</div>
-                  </div>
-                </div>
-              </div>
-
-              {dripDuration === "custom" && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="custom-days" className="text-base">Number of Days</Label>
-                    <Input
-                      id="custom-days"
-                      type="number"
-                      min="1"
-                      max="90"
-                      value={customDays}
-                      onChange={(e) => setCustomDays(e.target.value)}
-                      placeholder="14"
-                      required
-                      className="mt-2 h-12"
-                    />
-                    <p className="text-sm text-muted-foreground mt-2">
-                      1-90 days
-                    </p>
-                  </div>
-                  <div>
-                    <Label htmlFor="custom-emails" className="text-base">Number of Emails</Label>
-                    <Input
-                      id="custom-emails"
-                      type="number"
-                      min="1"
-                      max="30"
-                      value={customEmails}
-                      onChange={(e) => setCustomEmails(e.target.value)}
-                      placeholder="7"
-                      required
-                      className="mt-2 h-12"
-                    />
-                    <p className="text-sm text-muted-foreground mt-2">
-                      1-30 emails
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <Label htmlFor="words-per-email" className="text-base font-medium">Email length (words)</Label>
-                <Input
-                  id="words-per-email"
-                  type="number"
-                  min="50"
-                  max="500"
-                  value={wordsPerEmail}
-                  onChange={(e) => setWordsPerEmail(e.target.value)}
-                  placeholder="250"
-                  required
-                  className="mt-2 h-12"
-                />
-                <p className="text-sm text-muted-foreground mt-2">
-                  Between 50-500 words
-                </p>
-              </div>
-
-              {/* Advanced Options Collapsible */}
-              <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
-                <CollapsibleTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="w-full flex items-center justify-between p-4 hover:bg-muted/50"
-                  >
-                    <span className="text-base font-medium">Advanced Options</span>
-                    <ChevronDown className={`w-5 h-5 transition-transform ${advancedOpen ? 'rotate-180' : ''}`} />
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="pt-4 space-y-4">
-                  <div>
-                    <Label htmlFor="brand-guidelines" className="text-base">
-                      Upload Brand Guidelines (Optional)
-                    </Label>
-                    <div className="mt-2">
-                      <Input
-                        id="brand-guidelines"
-                        type="file"
-                        accept=".pdf,.doc,.docx,.txt"
-                        onChange={(e) => setBrandGuidelinesFile(e.target.files?.[0] || null)}
-                        className="h-12 cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-                      />
-                      <p className="text-sm text-muted-foreground mt-2">
-                        {brandGuidelinesFile
-                          ? `Selected: ${brandGuidelinesFile.name}`
-                          : "PDF, DOC, DOCX, or TXT format"}
-                      </p>
-                    </div>
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="include-cta"
-                    checked={includeCTA}
-                    onCheckedChange={(checked) => setIncludeCTA(checked as boolean)}
-                  />
-                  <Label htmlFor="include-cta" className="text-base cursor-pointer">
-                    Include Call-to-Action (CTA) in emails
-                  </Label>
-                </div>
-
-                {includeCTA && (
-                  <div>
-                    <Label htmlFor="cta-link" className="text-base">CTA Link (Optional)</Label>
-                    <Input
-                      id="cta-link"
-                      type="url"
-                      value={ctaLink}
-                      onChange={(e) => setCtaLink(e.target.value)}
-                      placeholder="https://example.com/signup"
-                      className="mt-2 h-12"
-                    />
-                    <p className="text-sm text-muted-foreground mt-2">
-                      {ctaLink ? "CTA will be a clickable button" : "Without a link, CTA will be text only"}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Button
-                  type="submit"
-                  className="flex-1 btn-premium shadow-lg hover-lift h-12 text-base"
-                  disabled={loading}
-                  onClick={() => trackButtonClick('Generate Campaign', '/create-campaign')}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Building your sequence...
-                    </>
-                  ) : (
-                    "Generate my emails"
-                  )}
-                </Button>
-                {dripDuration && (
-                  <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20 whitespace-nowrap">
-                    <Gem className="w-4 h-4 text-primary" />
-                    <span className="text-sm font-semibold">
-                      {getEmailCount(dripDuration, parseInt(customEmails))}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </form>
-          </Card>
-
-          <div className="grid md:grid-cols-3 gap-4 mt-8">
-            {[
-              { icon: LinkIcon, title: "Scan", desc: "We read your landing page" },
-              { icon: FileText, title: "Write", desc: "Generate campaign in 30s" },
-              { icon: Download, title: "Ship", desc: "Export HTML, send emails" }
-            ].map((step, i) => (
-              <motion.div
-                key={step.title}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.2 + i * 0.1 }}
-                className="flex items-start gap-3 p-4 rounded-lg bg-card/50"
-              >
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <step.icon className="w-4 h-4 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-medium text-sm mb-0.5">{step.title}</h4>
-                  <p className="text-xs text-muted-foreground">{step.desc}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Out of Credits Modal */}
         {userId && (
           <OutOfCreditsModal
             open={showOutOfCreditsModal}
