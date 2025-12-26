@@ -17,7 +17,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [creditsRemaining, setCreditsRemaining] = useState(0);
 
-  // ✅ READ CREDITS FROM email_credits
+  // ✅ Fetch credits from email_credits
   const fetchCredits = async (userId: string) => {
     const { data, error } = await supabase
       .from("email_credits")
@@ -36,24 +36,18 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
+    // 🔐 Listen only for logout
     const { data: { subscription } } =
-      supabase.auth.onAuthStateChange(async (_event, session) => {
+      supabase.auth.onAuthStateChange((_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
 
         if (!session) {
           navigate("/auth");
-          return;
         }
-
-        // 🔥 THIS IS THE KEY LINE
-        await supabase.rpc("initialize_free_trial");
-
-        await fetchCredits(session.user.id);
-        setLoading(false);
       });
 
-    // Initial session restore
+    // ✅ Single source of truth for init
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -63,7 +57,9 @@ const Dashboard = () => {
         return;
       }
 
+      // 🔥 One-time, safe initialization
       await supabase.rpc("initialize_free_trial");
+
       await fetchCredits(session.user.id);
       setLoading(false);
     });
