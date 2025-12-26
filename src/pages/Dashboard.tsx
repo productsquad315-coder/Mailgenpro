@@ -17,26 +17,23 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [creditsRemaining, setCreditsRemaining] = useState(0);
 
-  // ✅ Fetch credits from email_credits
-  const fetchCredits = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("email_credits")
-      .select("credits_free, credits_paid")
-      .eq("user_id", userId)
-      .single();
+  // ✅ FINAL: fetch credits via RPC (no RLS issues)
+  const fetchCredits = async () => {
+    const { data, error } = await supabase.rpc("get_my_credits");
 
-    if (error) {
+    if (error || !data || data.length === 0) {
       console.error("Failed to fetch credits:", error);
+      setCreditsRemaining(0);
       return;
     }
 
+    const row = data[0];
     setCreditsRemaining(
-      (data.credits_free || 0) + (data.credits_paid || 0)
+      (row.credits_free || 0) + (row.credits_paid || 0)
     );
   };
 
   useEffect(() => {
-    // 🔐 Listen only for logout
     const { data: { subscription } } =
       supabase.auth.onAuthStateChange((_event, session) => {
         setSession(session);
@@ -47,7 +44,6 @@ const Dashboard = () => {
         }
       });
 
-    // ✅ Single source of truth for init
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -57,10 +53,9 @@ const Dashboard = () => {
         return;
       }
 
-      // 🔥 One-time, safe initialization
+      // 🔥 Initialize + fetch credits
       await supabase.rpc("initialize_free_trial");
-
-      await fetchCredits(session.user.id);
+      await fetchCredits();
       setLoading(false);
     });
 
@@ -89,7 +84,6 @@ const Dashboard = () => {
       <DashboardSidebar />
 
       <div className="flex-1 lg:ml-64">
-        {/* Top Bar */}
         <div className="sticky top-0 bg-card border-b">
           <div className="px-6 py-4 flex justify-between items-center">
             <MobileSidebar />
@@ -112,12 +106,8 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Content */}
         <div className="p-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <CampaignsList userId={user.id} />
           </motion.div>
         </div>
