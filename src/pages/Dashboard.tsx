@@ -3,183 +3,124 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { User, Session } from "@supabase/supabase-js";
-import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { Plus, Sparkles, Crown, X, Gem } from "lucide-react";
+import { Plus, Gem } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import MobileSidebar from "@/components/dashboard/MobileSidebar";
 import CampaignsList from "@/components/dashboard/CampaignsList";
-import { useUserPlan } from "@/hooks/useUserPlan";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showLifetimeBanner, setShowLifetimeBanner] = useState(true);
   const [creditsRemaining, setCreditsRemaining] = useState(0);
-  const { isTrial } = useUserPlan();
+
+  // ✅ READ CREDITS FROM email_credits
+  const fetchCredits = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("email_credits")
+      .select("credits_free, credits_paid")
+      .eq("user_id", userId)
+      .single();
+
+    if (error) {
+      console.error("Failed to fetch credits:", error);
+      return;
+    }
+
+    setCreditsRemaining(
+      (data.credits_free || 0) + (data.credits_paid || 0)
+    );
+  };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+    const { data: { subscription } } =
+      supabase.auth.onAuthStateChange(async (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
 
         if (!session) {
           navigate("/auth");
-        } else {
-          fetchCredits(session.user.id);
+          return;
         }
-      }
-    );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+        // 🔥 THIS IS THE KEY LINE
+        await supabase.rpc("initialize_free_trial");
+
+        await fetchCredits(session.user.id);
+        setLoading(false);
+      });
+
+    // Initial session restore
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
 
       if (!session) {
         navigate("/auth");
-      } else {
-        fetchCredits(session.user.id);
+        return;
       }
+
+      await supabase.rpc("initialize_free_trial");
+      await fetchCredits(session.user.id);
       setLoading(false);
     });
 
-    // Set up realtime subscription for credit updates
-    const channel = supabase
-      .channel("credits_updates")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "user_usage",
-        },
-        (payload) => {
-          if (payload.new && typeof payload.new === "object") {
-            const newData = payload.new as any;
-            if (user && newData.user_id === user.id) {
-              const limit = newData.generations_limit;
-              const used = newData.generations_used;
-              const topup = newData.topup_credits || 0;
-              setCreditsRemaining(Math.max(0, limit - used) + topup);
-            }
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-      channel.unsubscribe();
-    };
-  }, [navigate, user]);
-
-  const fetchCredits = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("user_usage")
-      .select("generations_used, generations_limit, topup_credits")
-      .eq("user_id", userId)
-      .single();
-
-    if (!error && data) {
-      const limit = data.generations_limit;
-      const used = data.generations_used;
-      const topup = data.topup_credits || 0;
-      setCreditsRemaining(Math.max(0, limit - used) + topup);
-    }
-  };
-
-  // Auto-recovery mechanism for 0 credits
-  useEffect(() => {
-    if (creditsRemaining <= 0 && user && !loading) {
-      console.log("Credits at 0, attempting auto-recovery...");
-      const recover = async () => {
-        const { data, error } = await supabase.rpc('recover_my_credits');
-        if (!error && (data as any)?.recovered) {
-          console.log("Credits recovered:", data);
-          toast.success("We topped up your test credits!", {
-            description: "You're ready to generate campaigns."
-          });
-          fetchCredits(user.id);
-        } else {
-          if (error) console.error("Recovery failed:", error);
-        }
-      };
-      recover();
-    }
-  }, [creditsRemaining, user, loading]);
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   if (loading || !user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
       </div>
     );
   }
 
-  const userInitials = user.user_metadata?.full_name
-    ?.split(" ")
-    .map((n: string) => n[0])
-    .join("")
-    .toUpperCase() || user.email?.[0].toUpperCase() || "U";
-
-  const firstName = user.user_metadata?.full_name?.split(" ")[0] || "there";
+  const initials =
+    user.user_metadata?.full_name
+      ?.split(" ")
+      .map((n: string) => n[0])
+      .join("")
+      .toUpperCase() ||
+    user.email?.[0].toUpperCase() ||
+    "U";
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen flex bg-background">
       <DashboardSidebar />
 
       <div className="flex-1 lg:ml-64">
         {/* Top Bar */}
-        <div className="sticky top-0 z-40 bg-card/80 backdrop-blur-lg border-b border-border">
-          <div className="px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <MobileSidebar />
-                <div className="flex-1 min-w-0">
-                  <h1 className="text-lg sm:text-xl lg:text-2xl font-bold tracking-tight truncate">
-                    {firstName}
-                  </h1>
-                  <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 hidden sm:block">
-                    Your campaigns
-                  </p>
-                </div>
+        <div className="sticky top-0 bg-card border-b">
+          <div className="px-6 py-4 flex justify-between items-center">
+            <MobileSidebar />
+
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/10">
+                <Gem className="w-4 h-4 text-primary" />
+                <span className="font-semibold">{creditsRemaining}</span>
               </div>
-              <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20 min-w-[80px] justify-center">
-                  <Gem className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
-                  <span className="font-semibold text-sm sm:text-base whitespace-nowrap">{creditsRemaining}</span>
-                </div>
-                <Button
-                  onClick={() => navigate("/create-campaign")}
-                  className="btn-premium"
-                  size="sm"
-                >
-                  <Plus className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">New</span>
-                </Button>
-                <Avatar
-                  className="cursor-pointer hover-lift h-9 w-9 sm:h-10 sm:w-10"
-                  onClick={() => navigate("/profile")}
-                >
-                  <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-white font-semibold text-sm">
-                    {userInitials}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
+
+              <Button onClick={() => navigate("/create-campaign")}>
+                <Plus className="w-4 h-4 mr-2" />
+                New
+              </Button>
+
+              <Avatar onClick={() => navigate("/profile")}>
+                <AvatarFallback>{initials}</AvatarFallback>
+              </Avatar>
             </div>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        {/* Content */}
+        <div className="p-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
           >
             <CampaignsList userId={user.id} />
           </motion.div>
