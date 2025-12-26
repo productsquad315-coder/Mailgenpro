@@ -7,7 +7,7 @@ declare global {
   }
 }
 
-const GA4_MEASUREMENT_ID = import.meta.env.VITE_GA4_MEASUREMENT_ID;
+const GA4_MEASUREMENT_ID = import.meta.env.VITE_GA4_MEASUREMENT_ID || 'G-WSS5V4X9T1';
 
 // Helper to check if GA4 is loaded
 const isGA4Loaded = (): boolean => {
