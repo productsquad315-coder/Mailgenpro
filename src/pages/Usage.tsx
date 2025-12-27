@@ -31,13 +31,23 @@ const Usage = () => {
       setUser(user);
 
       // Fetch usage data
-      const { data: usageData } = await supabase
-        .from("user_usage")
-        .select("*")
+      const { data: creditsData } = await supabase
+        .from("email_credits")
+        .select("credits_total")
         .eq("user_id", user!.id)
         .single();
 
-      setUsage(usageData);
+      const { data: usageData } = await supabase
+        .from("user_usage")
+        .select("plan, generations_used")
+        .eq("user_id", user!.id)
+        .single();
+
+      setUsage({
+        credits_total: creditsData?.credits_total || 0,
+        plan: usageData?.plan || 'trial',
+        generations_used: usageData?.generations_used || 0
+      });
       setLoading(false);
     };
 
@@ -52,9 +62,10 @@ const Usage = () => {
   };
 
   const limits = getLimits();
+  const generationsRemaining = usage?.credits_total || 0;
   const generationsUsed = usage?.generations_used || 0;
-  const generationsRemaining = Math.max(0, limits.generations - generationsUsed);
-  const usagePercentage = (generationsUsed / limits.generations) * 100;
+  const totalAllocated = generationsRemaining + generationsUsed;
+  const usagePercentage = totalAllocated > 0 ? (generationsUsed / totalAllocated) * 100 : 0;
 
   const resetDate = new Date();
   resetDate.setMonth(resetDate.getMonth() + 1);
@@ -71,7 +82,7 @@ const Usage = () => {
   return (
     <div className="flex min-h-screen bg-background">
       <DashboardSidebar />
-      
+
       <div className="flex-1 flex flex-col">
         {/* Top Bar */}
         <div className="sticky top-0 z-40 border-b border-border/40 glass-card">
@@ -243,9 +254,9 @@ const Usage = () => {
                       {(generationsUsed / new Date().getDate()).toFixed(1)} generations
                     </span>
                   </div>
-                  <Progress 
-                    value={(generationsUsed / new Date().getDate() / limits.generations) * 100} 
-                    className="h-2" 
+                  <Progress
+                    value={(generationsUsed / new Date().getDate() / limits.generations) * 100}
+                    className="h-2"
                   />
                 </div>
 
@@ -256,9 +267,9 @@ const Usage = () => {
                       {Math.round((generationsUsed / new Date().getDate()) * 30)} generations
                     </span>
                   </div>
-                  <Progress 
-                    value={((generationsUsed / new Date().getDate()) * 30 / limits.generations) * 100} 
-                    className="h-2" 
+                  <Progress
+                    value={((generationsUsed / new Date().getDate()) * 30 / limits.generations) * 100}
+                    className="h-2"
                   />
                 </div>
               </div>

@@ -14,32 +14,31 @@ interface UsageCardProps {
 
 const UsageCard = ({ userId }: UsageCardProps) => {
   const navigate = useNavigate();
-  const [usage, setUsage] = useState({
-    used: 0,
-    limit: 5,
-    topupCredits: 0,
-    plan: "free",
-  });
+  const [creditsRemaining, setCreditsRemaining] = useState(0);
+  const [plan, setPlan] = useState("trial");
   const [loading, setLoading] = useState(true);
   const [hasShownLowCreditWarning, setHasShownLowCreditWarning] = useState(false);
 
   useEffect(() => {
     const fetchUsage = async () => {
-      const { data, error } = await supabase
-        .from("user_usage")
-        .select("*")
+      const { data: creditsData } = await supabase
+        .from("email_credits")
+        .select("credits_total")
         .eq("user_id", userId)
         .single();
 
-      if (error) {
-        console.error("Error fetching usage:", error);
-      } else if (data) {
-        setUsage({
-          used: data.generations_used,
-          limit: data.generations_limit,
-          topupCredits: data.topup_credits || 0,
-          plan: data.plan,
-        });
+      if (creditsData) {
+        setCreditsRemaining(creditsData.credits_total || 0);
+      }
+
+      const { data: usageData } = await supabase
+        .from("user_usage")
+        .select("plan")
+        .eq("user_id", userId)
+        .single();
+
+      if (usageData) {
+        setPlan(usageData.plan);
       }
       setLoading(false);
     };
@@ -48,7 +47,22 @@ const UsageCard = ({ userId }: UsageCardProps) => {
 
     // Set up realtime subscription
     const channel = supabase
-      .channel("user_usage_changes")
+      .channel("usage_updates")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "email_credits",
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          if (payload.new && typeof payload.new === "object") {
+            const newData = payload.new as any;
+            setCreditsRemaining(newData.credits_total || 0);
+          }
+        }
+      )
       .on(
         "postgres_changes",
         {
@@ -60,12 +74,7 @@ const UsageCard = ({ userId }: UsageCardProps) => {
         (payload) => {
           if (payload.new && typeof payload.new === "object") {
             const newData = payload.new as any;
-            setUsage({
-              used: newData.generations_used,
-              limit: newData.generations_limit,
-              topupCredits: newData.topup_credits || 0,
-              plan: newData.plan,
-            });
+            setPlan(newData.plan);
           }
         }
       )
@@ -80,7 +89,6 @@ const UsageCard = ({ userId }: UsageCardProps) => {
   useEffect(() => {
     if (loading) return;
 
-    const creditsRemaining = Math.max(0, usage.limit - usage.used) + usage.topupCredits;
     const isLowCredits = creditsRemaining < 10;
     const isOutOfCredits = creditsRemaining <= 0;
 
@@ -108,7 +116,7 @@ const UsageCard = ({ userId }: UsageCardProps) => {
     if (creditsRemaining >= 10 && hasShownLowCreditWarning) {
       setHasShownLowCreditWarning(false);
     }
-  }, [usage, loading, hasShownLowCreditWarning, navigate]);
+  }, [creditsRemaining, loading, hasShownLowCreditWarning, navigate]);
 
   if (loading) {
     return (
@@ -118,8 +126,6 @@ const UsageCard = ({ userId }: UsageCardProps) => {
     );
   }
 
-  const totalCredits = usage.limit + usage.topupCredits; // Total potential credits
-  const creditsRemaining = Math.max(0, usage.limit - usage.used) + usage.topupCredits;
   const isLowCredits = creditsRemaining < 10;
   const isOutOfCredits = creditsRemaining <= 0;
 
@@ -134,7 +140,7 @@ const UsageCard = ({ userId }: UsageCardProps) => {
           <div>
             <h3 className="font-semibold text-lg mb-1">🔋 Credit Balance</h3>
             <p className="text-sm text-muted-foreground capitalize">
-              {usage.plan === 'trial' ? 'Free Trial' : `${usage.plan} Plan`}
+              {plan === 'trial' ? 'Free Trial' : `${plan} Plan`}
             </p>
           </div>
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
@@ -158,14 +164,9 @@ const UsageCard = ({ userId }: UsageCardProps) => {
               </span>
             )}
           </div>
-          <Progress value={percentage} className="h-2" />
+          <Progress value={Math.min(100, (creditsRemaining / 50) * 100)} className="h-2" />
           <p className="text-xs text-muted-foreground">
-            {usage.used} / {totalCredits} credits used
-            {usage.topupCredits > 0 && (
-              <span className="ml-1 text-primary">
-                ({usage.topupCredits} bonus)
-              </span>
-            )}
+            {creditsRemaining} credits available
           </p>
         </div>
 

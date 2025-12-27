@@ -123,22 +123,21 @@ const CreateCampaign = () => {
       }
 
       // For authenticated users, check credit balance
-if (userId) {
-  const { data: usageData } = await supabase
-    .from("user_usage")
-    .select("generations_used, generations_limit, topup_credits")
-    .eq("user_id", userId)
-    .single();
+      if (userId) {
+        const { data: creditsData } = await supabase
+          .from("email_credits")
+          .select("credits_total")
+          .eq("user_id", userId)
+          .single();
 
-  const totalCredits = usageData.generations_limit + usageData.topup_credits;
-  const creditsRemaining = totalCredits - usageData.generations_used;
+        const creditsRemaining = creditsData?.credits_total || 0;
 
-  if (creditsRemaining <= 0) {
-    setShowOutOfCreditsModal(true);
-    setLoading(false);
-    return;
-  }
-} else {
+        if (creditsRemaining <= 0) {
+          setShowOutOfCreditsModal(true);
+          setLoading(false);
+          return;
+        }
+      } else {
         // Check if guest has already used their free generation
         const guestCampaignId = localStorage.getItem("guestCampaignId");
         if (guestCampaignId) {

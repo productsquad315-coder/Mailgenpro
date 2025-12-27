@@ -135,7 +135,7 @@ const Billing = () => {
         .from('user_usage')
         .select('paddle_customer_id')
         .eq('user_id', user?.id)
-        .single();
+        .maybeSingle(); // Use maybeSingle to avoid 406/error if record is missing
 
       if ((usageData as any)?.paddle_customer_id) {
         // Paddle customer portal - users can manage subscriptions at paddle.com
