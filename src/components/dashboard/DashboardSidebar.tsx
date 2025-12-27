@@ -54,8 +54,18 @@ const DashboardSidebar = () => {
           })}
         </nav>
 
-        {/* Sign Out */}
-        <div className="p-3 border-t border-border">
+        {/* Credit Display & Sign Out */}
+        <div className="p-3 border-t border-border space-y-3">
+          <div className="px-3 py-2 rounded-lg bg-primary/10 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span className="text-xs font-semibold text-primary">AI Credits</span>
+            </div>
+            <Link to="/usage" className="text-xs font-bold hover:underline">
+              Manage
+            </Link>
+          </div>
+
           <Button
             variant="ghost"
             className="w-full justify-start text-muted-foreground hover:text-foreground"

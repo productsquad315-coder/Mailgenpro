@@ -141,36 +141,62 @@ serve(async (req) => {
       }
     }
 
-    // Fetch URL content
+    // Fetch URL content with Multi-Level Strategy
     let pageContent = "";
     try {
+      console.log("Scraping URL (Level 1 - Direct):", url);
       const urlResponse = await fetch(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
         },
         redirect: 'follow',
-        signal: AbortSignal.timeout(15000)
+        signal: AbortSignal.timeout(10000) // 10s for direct fetch
       });
 
-      if (!urlResponse.ok) {
-        throw new Error(`HTTP ${urlResponse.status}: ${urlResponse.statusText}`);
+      if (urlResponse.ok) {
+        const html = await urlResponse.text();
+        pageContent = html
+          .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+          .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        console.log("Direct fetch content length:", pageContent.length);
       }
 
-      const html = await urlResponse.text();
-      pageContent = html
-        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-        .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
-        .replace(/<[^>]+>/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
+      // Level 2: Fallback to Jina Reader if direct fetch failed or content is too thin
+      if (!pageContent || pageContent.length < 300) {
+        console.log("Direct fetch failed or content thin, attempting Level 2 (Jina Reader)...");
+        const jinaUrl = `https://r.jina.ai/${url}`;
+        const jinaResponse = await fetch(jinaUrl, {
+          headers: {
+            'Accept': 'application/json',
+            'X-Return-Format': 'markdown'
+          },
+          signal: AbortSignal.timeout(15000) // 15s for Jina
+        });
 
-      if (pageContent.length < 100) {
-        throw new Error("Page content too short or inaccessible");
+        if (jinaResponse.ok) {
+          const jinaData = await jinaResponse.text();
+          // Jina returns a clean markdown version
+          pageContent = jinaData;
+          console.log("Jina fetch success, content length:", pageContent.length);
+        }
+      }
+
+      if (!pageContent || pageContent.length < 100) {
+        throw new Error("Unable to extract sufficient content from the website.");
       }
     } catch (e) {
-      console.error("Error fetching URL:", e);
+      console.error("Scraping Strategy Error:", e);
       return new Response(
-        JSON.stringify({ error: "Unable to access the website. Please check the URL." }),
+        JSON.stringify({
+          error: "Website access restricted",
+          details: "This website is protected or JavaScript-heavy. Please try another URL or enter details manually in Brand Guidelines."
+        }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
