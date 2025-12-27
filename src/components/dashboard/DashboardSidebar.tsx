@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +10,32 @@ import mailgenproIcon from "@/assets/mailgenpro-icon.png";
 const DashboardSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [credits, setCredits] = useState<number | null>(null);
+
+  const fetchCredits = async () => {
+    const { data, error } = await supabase.rpc("get_my_credits");
+    if (!error && data && data.length > 0) {
+      const row = data[0] as any;
+      setCredits((row.credits_free || 0) + (row.credits_paid || 0));
+    }
+  };
+
+  useEffect(() => {
+    fetchCredits();
+
+    const channel = supabase
+      .channel("sidebar_credits")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "email_credits" },
+        () => fetchCredits()
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, []);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -58,11 +85,16 @@ const DashboardSidebar = () => {
         <div className="p-3 border-t border-border space-y-3">
           <div className="px-3 py-2 rounded-lg bg-primary/10 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-xs font-semibold text-primary">AI Credits</span>
+              <div className={`w-2 h-2 rounded-full animate-pulse ${credits === 0 ? 'bg-destructive' : 'bg-primary'}`} />
+              <div className="flex flex-col">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Credits</span>
+                <span className="text-sm font-bold text-foreground leading-none">
+                  {credits !== null ? credits : "..."}
+                </span>
+              </div>
             </div>
-            <Link to="/usage" className="text-xs font-bold hover:underline">
-              Manage
+            <Link to="/usage" className="p-1.5 rounded-md hover:bg-background text-xs font-semibold transition-colors">
+              Top Up
             </Link>
           </div>
 
