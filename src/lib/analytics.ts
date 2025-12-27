@@ -8,19 +8,42 @@ declare global {
 }
 
 const GA4_MEASUREMENT_ID = import.meta.env.VITE_GA4_MEASUREMENT_ID || 'G-WSS5V4X9T1';
+const IS_DEV = import.meta.env.DEV;
 
 // Helper to check if GA4 is loaded
 const isGA4Loaded = (): boolean => {
   return typeof window !== 'undefined' && typeof window.gtag === 'function';
 };
 
+/**
+ * Initialize user identification in GA4
+ * @param userId Unique identifier for the user
+ * @param userProperties Optional additional user properties
+ */
+export const identifyUser = (userId: string | null, userProperties?: Record<string, any>) => {
+  if (!isGA4Loaded() || !GA4_MEASUREMENT_ID) return;
+
+  if (userId) {
+    window.gtag?.('set', 'user_id', userId);
+    if (userProperties) {
+      window.gtag?.('set', 'user_properties', userProperties);
+    }
+    if (IS_DEV) console.log(`[GA4] User identified: ${userId}`, userProperties);
+  } else {
+    // Reset user_id on logout
+    window.gtag?.('set', 'user_id', null);
+    if (IS_DEV) console.log('[GA4] User de-identified');
+  }
+};
+
 // Page view tracking
 export const trackPageView = (path: string, title?: string) => {
   if (!isGA4Loaded() || !GA4_MEASUREMENT_ID) return;
-  
+
   window.gtag?.('event', 'page_view', {
     page_path: path,
     page_title: title || document.title,
+    debug_mode: IS_DEV,
   });
 };
 
@@ -30,8 +53,14 @@ export const trackEvent = (
   eventParams?: Record<string, any>
 ) => {
   if (!isGA4Loaded() || !GA4_MEASUREMENT_ID) return;
-  
-  window.gtag?.('event', eventName, eventParams);
+
+  const params = {
+    ...eventParams,
+    debug_mode: IS_DEV,
+  };
+
+  window.gtag?.('event', eventName, params);
+  if (IS_DEV) console.log(`[GA4] Event: ${eventName}`, params);
 };
 
 // Button click tracking
@@ -73,7 +102,7 @@ export const trackCampaignGeneration = (
     campaign_id: campaignId,
     sequence_type: sequenceType,
   });
-  
+
   trackConversion('generation');
 };
 
@@ -83,7 +112,7 @@ export const trackExport = (exportType: 'html' | 'zip', campaignId: string) => {
     export_type: exportType,
     campaign_id: campaignId,
   });
-  
+
   trackConversion('export');
 };
 
@@ -93,12 +122,9 @@ export const trackPlanUpgrade = (planName: string, price: number) => {
     plan_name: planName,
     price,
   });
-  
+
   trackConversion('payment', price, { plan: planName });
 };
-
-// User session tracking (automatic via GA4)
-// Bounce rate is calculated automatically by GA4
 
 // User funnel events
 export const trackFunnelStep = (

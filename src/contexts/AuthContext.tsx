@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { identifyUser } from "@/lib/analytics";
 
 interface AuthContextType {
     user: User | null;
@@ -33,6 +34,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         return () => subscription.unsubscribe();
     }, []);
+
+    useEffect(() => {
+        if (user) {
+            identifyUser(user.id, {
+                email: user.email,
+                role: user.user_metadata?.app_role || 'user'
+            });
+        } else if (!loading) {
+            identifyUser(null);
+        }
+    }, [user, loading]);
 
     const signOut = async () => {
         await supabase.auth.signOut();

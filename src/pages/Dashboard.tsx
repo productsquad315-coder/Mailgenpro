@@ -27,7 +27,7 @@ const Dashboard = () => {
       return;
     }
 
-    const row = data[0];
+    const row = data[0] as any;
     setCreditsRemaining(
       (row.credits_free || 0) + (row.credits_paid || 0)
     );
@@ -59,7 +59,26 @@ const Dashboard = () => {
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    // Set up realtime subscription for credit updates
+    const channel = supabase
+      .channel("credits_updates")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "email_credits",
+        },
+        () => {
+          fetchCredits();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+      channel.unsubscribe();
+    };
   }, [navigate]);
 
   if (loading || !user) {

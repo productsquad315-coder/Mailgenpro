@@ -35,10 +35,10 @@ Deno.serve(async (req) => {
 
     if (!expiredUsers || expiredUsers.length === 0) {
       return new Response(
-        JSON.stringify({ 
-          success: true, 
+        JSON.stringify({
+          success: true,
           message: 'No users need credit reset',
-          resetCount: 0 
+          resetCount: 0
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -66,6 +66,22 @@ Deno.serve(async (req) => {
           error: updateError.message,
         });
       } else {
+        // SYNC: Update email_credits table as well
+        const { error: creditsSyncError } = await supabase
+          .from('email_credits')
+          .update({
+            credits_free: user.generations_limit,
+            credits_total: user.generations_limit + (user.topup_credits || 0),
+            credits_used_this_month: 0,
+            last_reset_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.user_id);
+
+        if (creditsSyncError) {
+          console.error(`Failed to sync email_credits for user ${user.user_id}:`, creditsSyncError);
+        }
+
         console.log(`Successfully reset credits for user ${user.user_id} (${user.plan} plan)`);
         resetResults.push({
           user_id: user.user_id,
