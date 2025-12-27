@@ -36,13 +36,43 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    // Verify user authentication
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
     if (authError || !user) {
       console.error("Authentication failed:", authError?.message);
       return new Response(
         JSON.stringify({ error: "Unauthorized - Invalid token" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Initialize service client for privileged operations (credits)
+    const serviceClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
+      auth: { persistSession: false },
+    });
+
+    // Check credit balance
+    const { data: creditsData, error: creditsError } = await serviceClient
+      .from("email_credits")
+      .select("credits_total")
+      .eq("user_id", user.id)
+      .single();
+
+    if (creditsError) {
+      console.error("Error fetching credit balance:", creditsError);
+      return new Response(
+        JSON.stringify({ error: "Unable to verify credit balance" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if ((creditsData?.credits_total || 0) <= 0) {
+      console.error("Insufficient credits for user:", user.id);
+      return new Response(
+        JSON.stringify({
+          error: "Insufficient credits",
+          details: "Not enough credits. Please buy a credit pack to continue."
+        }),
+        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -120,6 +150,13 @@ serve(async (req) => {
 
     const improvedContent = aiData.choices[0].message.content.trim();
     console.log("Content improved successfully");
+
+    // Deduct credit
+    const { error: deductError } = await serviceClient.rpc("deduct_email_credit", { p_user_id: user.id });
+    if (deductError) {
+      console.error("Error deducting credit:", deductError);
+      // We still return the content as the AI work is done, but log the error
+    }
 
     return new Response(JSON.stringify({ improvedContent }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

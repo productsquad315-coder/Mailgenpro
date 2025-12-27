@@ -46,17 +46,15 @@ const QuickSendModal = ({ campaign, open, onClose }: QuickSendModalProps) => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
-            const { data: creditsData } = await supabase
-                .from('email_credits')
-                .select('credits_free, credits_paid, credits_total')
-                .eq('user_id', user.id)
-                .single();
+            // Fetch email credits via unified RPC
+            const { data: creditsResponse } = await supabase.rpc('get_my_credits');
+            const currentCredits = (creditsResponse?.[0] || {}) as any;
 
-            if (creditsData) {
+            if (currentCredits) {
                 setCredits({
-                    free: creditsData.credits_free || 0,
-                    paid: creditsData.credits_paid || 0,
-                    total: creditsData.credits_total || 0,
+                    free: currentCredits.credits_free || 0,
+                    paid: currentCredits.credits_paid || 0,
+                    total: currentCredits.credits_total || 0,
                 });
             }
         } catch (error) {

@@ -18,93 +18,22 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Find all users whose credit period has ended and have active subscriptions
-    const { data: expiredUsers, error: fetchError } = await supabase
-      .from('user_usage')
-      .select('*')
-      .lt('current_period_end', new Date().toISOString())
-      .in('subscription_status', ['active', 'trial'])
-      .neq('plan', 'free');
+    // Use the massive global reset RPC
+    const { data: resetResult, error: resetError } = await supabase.rpc('reset_all_expired_credits');
 
-    if (fetchError) {
-      console.error('Error fetching expired users:', fetchError);
-      throw fetchError;
+    if (resetError) {
+      console.error('Error in global credit reset RPC:', resetError);
+      throw resetError;
     }
 
-    console.log(`Found ${expiredUsers?.length || 0} users with expired credit periods`);
-
-    if (!expiredUsers || expiredUsers.length === 0) {
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: 'No users need credit reset',
-          resetCount: 0
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Reset credits for each user
-    const resetResults = [];
-    for (const user of expiredUsers) {
-      const nextPeriodEnd = new Date();
-      nextPeriodEnd.setMonth(nextPeriodEnd.getMonth() + 1);
-
-      const { error: updateError } = await supabase
-        .from('user_usage')
-        .update({
-          generations_used: 0,
-          current_period_end: nextPeriodEnd.toISOString(),
-        })
-        .eq('user_id', user.user_id);
-
-      if (updateError) {
-        console.error(`Failed to reset credits for user ${user.user_id}:`, updateError);
-        resetResults.push({
-          user_id: user.user_id,
-          success: false,
-          error: updateError.message,
-        });
-      } else {
-        // SYNC: Update email_credits table as well
-        const { error: creditsSyncError } = await supabase
-          .from('email_credits')
-          .update({
-            credits_free: user.generations_limit,
-            credits_total: user.generations_limit + (user.topup_credits || 0),
-            credits_used_this_month: 0,
-            last_reset_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', user.user_id);
-
-        if (creditsSyncError) {
-          console.error(`Failed to sync email_credits for user ${user.user_id}:`, creditsSyncError);
-        }
-
-        console.log(`Successfully reset credits for user ${user.user_id} (${user.plan} plan)`);
-        resetResults.push({
-          user_id: user.user_id,
-          success: true,
-          plan: user.plan,
-          previous_period_end: user.current_period_end,
-          new_period_end: nextPeriodEnd.toISOString(),
-        });
-      }
-    }
-
-    const successCount = resetResults.filter(r => r.success).length;
-    const failureCount = resetResults.filter(r => !r.success).length;
-
-    console.log(`Credit reset completed: ${successCount} successful, ${failureCount} failed`);
+    const successCount = resetResult?.[0]?.reset_count || 0;
+    console.log(`Global credit reset completed: ${successCount} users reset`);
 
     return new Response(
       JSON.stringify({
         success: true,
         message: 'Credit reset job completed',
         resetCount: successCount,
-        failureCount,
-        results: resetResults,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

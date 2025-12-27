@@ -1,12 +1,26 @@
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useUserPlan = () => {
-  // TEMP: user_usage deprecated
-  const [plan] = useState<string>("free");
-  const [loading, setLoading] = useState(false);
+  const [plan, setPlan] = useState<string>("trial");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(false);
+    const fetchPlan = async () => {
+      try {
+        const { data: creditsResponse } = await supabase.rpc('get_my_credits');
+        const currentData = (creditsResponse?.[0] || {}) as any;
+        if (currentData.plan) {
+          setPlan(currentData.plan);
+        }
+      } catch (error) {
+        console.error("Error fetching plan in hook:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPlan();
   }, []);
 
   const isTrial = plan === "trial";

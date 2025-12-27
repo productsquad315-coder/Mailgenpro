@@ -21,25 +21,11 @@ const UsageCard = ({ userId }: UsageCardProps) => {
 
   useEffect(() => {
     const fetchUsage = async () => {
-      const { data: creditsData } = await supabase
-        .from("email_credits")
-        .select("credits_total")
-        .eq("user_id", userId)
-        .single();
+      const { data: creditsResponse } = await supabase.rpc('get_my_credits');
+      const currentCredits = (creditsResponse?.[0] || {}) as any;
 
-      if (creditsData) {
-        setCreditsRemaining(creditsData.credits_total || 0);
-      }
-
-      const { data: usageData } = await supabase
-        .from("user_usage")
-        .select("plan")
-        .eq("user_id", userId)
-        .single();
-
-      if (usageData) {
-        setPlan(usageData.plan);
-      }
+      setCreditsRemaining(currentCredits.credits_total || 0);
+      setPlan(currentCredits.plan || 'trial');
       setLoading(false);
     };
 

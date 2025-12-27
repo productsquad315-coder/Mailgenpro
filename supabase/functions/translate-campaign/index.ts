@@ -35,6 +35,37 @@ serve(async (req) => {
       );
     }
 
+    // Initialize service client for privileged operations (credits)
+    const serviceClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
+      auth: { persistSession: false },
+    });
+
+    // Check credit balance
+    const { data: creditsData, error: creditsError } = await serviceClient
+      .from("email_credits")
+      .select("credits_total")
+      .eq("user_id", user.id)
+      .single();
+
+    if (creditsError) {
+      console.error("Error fetching credit balance:", creditsError);
+      return new Response(
+        JSON.stringify({ error: "Unable to verify credit balance" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if ((creditsData?.credits_total || 0) <= 0) {
+      console.error("Insufficient credits for user:", user.id);
+      return new Response(
+        JSON.stringify({
+          error: "Insufficient credits",
+          details: "Not enough credits. Please buy a credit pack to continue."
+        }),
+        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { campaignId, targetLanguage } = await req.json();
 
     if (!campaignId || !targetLanguage) {
@@ -151,15 +182,11 @@ Return ONLY valid JSON (no markdown, no code blocks):
 
       let contentText = aiData.choices[0].message.content.trim();
 
-      // Extract JSON from markdown code blocks if present
-      const jsonBlockMatch = contentText.match(/```json\s*([\s\S]*?)\s*```/);
-      if (jsonBlockMatch) {
-        contentText = jsonBlockMatch[1].trim();
-      } else {
-        const codeBlockMatch = contentText.match(/```\s*([\s\S]*?)\s*```/);
-        if (codeBlockMatch) {
-          contentText = codeBlockMatch[1].trim();
-        }
+      // Robust JSON cleaning for markdown and other artifacts
+      if (contentText.includes("```json")) {
+        contentText = contentText.split("```json")[1].split("```")[0].trim();
+      } else if (contentText.includes("```")) {
+        contentText = contentText.split("```")[1].split("```")[0].trim();
       }
 
       let translatedData;
@@ -202,6 +229,12 @@ Return ONLY valid JSON (no markdown, no code blocks):
     }
 
     console.log("Campaign translation completed successfully");
+
+    // Deduct credit
+    const { error: deductError } = await serviceClient.rpc("deduct_email_credit", { p_user_id: user.id });
+    if (deductError) {
+      console.error("Error deducting credit:", deductError);
+    }
 
     return new Response(
       JSON.stringify({ success: true, translatedCount: translatedEmails.length }),

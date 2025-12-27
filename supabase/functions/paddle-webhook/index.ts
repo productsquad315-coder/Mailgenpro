@@ -190,38 +190,30 @@ async function handleTransactionCompleted(supabase: any, payload: any, userId: s
         }
 
         if (creditsToAdd > 0) {
-            // Use the unified add_topup_credits RPC to update both tables
-            const { error: rpcError } = await supabase.rpc('add_topup_credits', {
-                p_user_id: userId,
-                p_credits: creditsToAdd
+            // Update user_usage first
+            const { data: currentUsage } = await supabase
+                .from('user_usage')
+                .select('topup_credits')
+                .eq('user_id', userId)
+                .single();
+
+            const currentTopup = currentUsage?.topup_credits || 0;
+
+            await supabase
+                .from('user_usage')
+                .update({ topup_credits: currentTopup + creditsToAdd })
+                .eq('user_id', userId);
+
+            // Then use the unified sync_user_credits RPC to update the runtime table
+            const { error: syncError } = await supabase.rpc('sync_user_credits', {
+                p_user_id: userId
             });
 
-            if (rpcError) {
-                console.error('Error adding topup credits via RPC:', rpcError);
-                // Fallback to manual update if RPC fails
-                const { data: currentUsage } = await supabase
-                    .from('user_usage')
-                    .select('topup_credits')
-                    .eq('user_id', userId)
-                    .single();
-
-                const currentTopup = currentUsage?.topup_credits || 0;
-
-                await supabase
-                    .from('user_usage')
-                    .update({ topup_credits: currentTopup + creditsToAdd })
-                    .eq('user_id', userId);
-
-                await supabase
-                    .from('email_credits')
-                    .update({
-                        credits_paid: supabase.sql`credits_paid + ${creditsToAdd}`,
-                        credits_total: supabase.sql`credits_total + ${creditsToAdd}`
-                    })
-                    .eq('user_id', userId);
+            if (syncError) {
+                console.error('Error syncing credits via RPC:', syncError);
             }
 
-            console.log(`Successfully added ${creditsToAdd} topup credits to user ${userId}`);
+            console.log(`Successfully added ${creditsToAdd} topup credits and synced for user ${userId}`);
         }
     }
 }
@@ -284,18 +276,13 @@ async function handleSubscriptionCreated(supabase: any, payload: any, userId: st
         throw error;
     }
 
-    // SYNC: Update email_credits as well
-    const { error: creditsError } = await supabase
-        .from('email_credits')
-        .update({
-            credits_free: generationsLimit,
-            credits_total: supabase.sql`credits_paid + ${generationsLimit}`,
-            updated_at: new Date().toISOString()
-        })
-        .eq('user_id', userId);
+    // SYNC: Call the master sync RPC to update email_credits
+    const { error: syncError } = await supabase.rpc('sync_user_credits', {
+        p_user_id: userId
+    });
 
-    if (creditsError) {
-        console.error('Error syncing email credits:', creditsError);
+    if (syncError) {
+        console.error('Error syncing email credits after subscription creation:', syncError);
     }
 
     console.log('Successfully created subscription with credits');
@@ -345,18 +332,12 @@ async function handleSubscriptionUpdated(supabase: any, payload: any, userId: st
         throw error;
     }
 
-    // SYNC: If credits were reset, sync email_credits
-    if (updateData.generations_used === 0) {
-        const { error: syncError } = await supabase
-            .from('email_credits')
-            .update({
-                credits_used_this_month: 0,
-                updated_at: new Date().toISOString()
-            })
-            .eq('user_id', userId);
+    // SYNC: Always sync after update to ensure total/free alignment
+    const { error: syncError } = await supabase.rpc('sync_user_credits', {
+        p_user_id: userId
+    });
 
-        if (syncError) console.error('Error syncing email credits on renewal:', syncError);
-    }
+    if (syncError) console.error('Error syncing email credits after update:', syncError);
 
     console.log('Successfully updated subscription status');
 }
@@ -379,6 +360,13 @@ async function handleSubscriptionCanceled(supabase: any, payload: any, userId: s
         console.error('Error canceling subscription:', error);
         throw error;
     }
+
+    // SYNC: Call the master sync RPC
+    const { error: syncError } = await supabase.rpc('sync_user_credits', {
+        p_user_id: userId
+    });
+
+    if (syncError) console.error('Error syncing email credits after cancellation:', syncError);
 
     console.log('Successfully canceled subscription - user moved to trial with 0 credits');
 }

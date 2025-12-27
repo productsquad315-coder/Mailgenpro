@@ -113,21 +113,21 @@ serve(async (req) => {
     // Check credit balance ONLY for authenticated users with owned campaigns
     if (user && campaign.user_id) {
       console.log("Checking credit balance for user:", user.id);
-      const { data: usageData, error: usageError } = await serviceClient
-        .from("user_usage")
-        .select("generations_used, generations_limit, topup_credits")
+      const { data: creditsData, error: creditsError } = await serviceClient
+        .from("email_credits")
+        .select("credits_total")
         .eq("user_id", user.id)
         .single();
 
-      if (usageError) {
-        console.error("Error fetching user usage:", usageError);
+      if (creditsError) {
+        console.error("Error fetching credit balance:", creditsError);
         return new Response(
           JSON.stringify({ error: "Unable to verify credit balance" }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      const creditsRemaining = (usageData.generations_limit - usageData.generations_used) + usageData.topup_credits;
+      const creditsRemaining = creditsData?.credits_total || 0;
 
       if (creditsRemaining <= 0) {
         console.error("Insufficient credits for user:", user.id);
@@ -136,7 +136,7 @@ serve(async (req) => {
             error: "Insufficient credits",
             details: "Not enough credits. Please buy a credit pack to continue."
           }),
-          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
     }
@@ -601,9 +601,33 @@ EXECUTE.`;
       }),
     });
 
+    if (!resp.ok) {
+      const errorText = await resp.text();
+      console.error("OpenAI API error:", errorText);
+      throw new Error(`AI Generation failed: ${resp.status}`);
+    }
+
     const aiData = await resp.json();
-    const contentText = aiData.choices[0].message.content;
-    const emailsData = JSON.parse(contentText);
+    let contentText = aiData.choices[0].message.content;
+
+    // Robust JSON cleaning for markdown and other artifacts
+    if (contentText.includes("```json")) {
+      contentText = contentText.split("```json")[1].split("```")[0].trim();
+    } else if (contentText.includes("```")) {
+      contentText = contentText.split("```")[1].split("```")[0].trim();
+    }
+
+    let emailsData;
+    try {
+      emailsData = JSON.parse(contentText);
+    } catch (parseError) {
+      console.error("Failed to parse AI JSON:", contentText);
+      throw new Error("Invalid response format from AI. Please try again.");
+    }
+
+    if (!emailsData.emails || !Array.isArray(emailsData.emails)) {
+      throw new Error("AI response was missing the expected email sequence data.");
+    }
 
     // Save emails
     for (let i = 0; i < emailsData.emails.length; i++) {

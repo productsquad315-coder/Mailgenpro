@@ -138,17 +138,18 @@ const Admin = () => {
 
             toast.success(`Successfully added ${credits} credits to ${selectedUser.email}`);
 
-            // Refresh user data
-            const { data: usage } = await supabase
-                .from("user_usage")
-                .select("*")
+            // Refresh user data from email_credits
+            const { data: creditsData } = await supabase
+                .from("email_credits")
+                .select("credits_total")
                 .eq("user_id", selectedUser.id)
                 .single();
 
-            if (usage) {
+            if (creditsData) {
                 setSelectedUser({
                     ...selectedUser,
-                    topup_credits: usage.topup_credits || 0,
+                    credits_total: creditsData.credits_total || 0,
+                    topup_credits: creditsData.credits_total || 0, // Keep for UI compatibility
                 });
             }
 

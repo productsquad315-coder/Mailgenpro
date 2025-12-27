@@ -14,10 +14,17 @@ const mapErrorToFriendly = (raw: any, url?: string): string => {
   const body = (typeof (raw?.body ?? raw?.context?.body) === "string" ? (raw?.body ?? raw?.context?.body) : "") as string;
   const combined = `${msg} ${details} ${body}`.toLowerCase();
 
-  if (combined.includes("402") || combined.includes("credit") || combined.includes("payment")) {
+  if (combined.includes("402") || combined.includes("insufficient") || combined.includes("credits") || combined.includes("payment")) {
     return "You’re out of AI credits. Please upgrade or add credits to continue.";
   }
+  if (combined.includes("ai generation failed") || combined.includes("ai service") || combined.includes("invalid response from ai")) {
+    return "The AI service is processing too many requests or returned a malformed response. Please try again in a moment.";
+  }
   if (combined.includes("non-2xx") || combined.includes("non 2xx") || combined.includes("bad status") || combined.includes("unexpected response")) {
+    // If it's a generic non-2xx but we don't have a more specific message yet
+    if (combined.includes("http 500") || combined.includes("status 500")) {
+      return "The AI engine encountered a server error. We've been notified. Please try again or use a different URL.";
+    }
     return "We couldn’t reach that page or it blocked our request. Make sure the URL is correct and publicly accessible, then try again.";
   }
   if (combined.includes("timeout") || combined.includes("timed out") || combined.includes("network") || combined.includes("failed to fetch")) {
@@ -26,8 +33,8 @@ const mapErrorToFriendly = (raw: any, url?: string): string => {
   if (combined.includes("spa") || combined.includes("single-page")) {
     return "This website loads content dynamically and can’t be analyzed. Try a static page like a blog or product page.";
   }
-  if (combined.includes("403") || combined.includes("401") || combined.includes("access denied") || combined.includes("forbidden")) {
-    return "Access to that page is restricted. Please use a publicly accessible URL.";
+  if (combined.includes("403") || combined.includes("401") || combined.includes("access denied") || combined.includes("forbidden") || combined.includes("unauthorized")) {
+    return "Access to that page or service is restricted. Please ensure you are signed in and using a valid URL.";
   }
   if (combined.includes("404") || combined.includes("not found")) {
     return "We couldn’t find that page. Please check the URL and try again.";
@@ -38,7 +45,7 @@ const mapErrorToFriendly = (raw: any, url?: string): string => {
   if ((combined.includes("invalid") && combined.includes("url")) || combined.includes("invalid url")) {
     return "Please enter a valid URL (including https://).";
   }
-  return "We couldn’t analyze that page. Please try again with another URL.";
+  return msg.length > 20 ? msg : "We couldn’t analyze that page. Please try again with another URL.";
 };
 
 const AnalyzingCampaign = () => {

@@ -137,22 +137,22 @@ serve(async (req) => {
         // Calculate total emails to send
         const totalEmails = activeContacts.length * emails.length;
 
-        // Check email credits in consolidated user_usage table
-        const { data: usageData, error: usageError } = await supabaseClient
-            .from('user_usage')
-            .select('generations_used, generations_limit, topup_credits')
+        // Check email credits in unified email_credits table
+        const { data: creditsData, error: creditsError } = await supabaseClient
+            .from('email_credits')
+            .select('credits_total')
             .eq('user_id', user.id)
             .single();
 
-        if (usageError) {
-            console.error('Usage credits error:', usageError);
+        if (creditsError) {
+            console.error('Credits check error:', creditsError);
             return new Response(JSON.stringify({ error: 'Failed to check email credits' }), {
                 status: 500,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             });
         }
 
-        const availableCredits = (usageData?.generations_limit || 0) - (usageData?.generations_used || 0) + (usageData?.topup_credits || 0);
+        const availableCredits = creditsData?.credits_total || 0;
 
         if (availableCredits < totalEmails) {
             return new Response(JSON.stringify({

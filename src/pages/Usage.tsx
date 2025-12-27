@@ -30,23 +30,14 @@ const Usage = () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
 
-      // Fetch usage data
-      const { data: creditsData } = await supabase
-        .from("email_credits")
-        .select("credits_total")
-        .eq("user_id", user!.id)
-        .single();
-
-      const { data: usageData } = await supabase
-        .from("user_usage")
-        .select("plan, generations_used")
-        .eq("user_id", user!.id)
-        .single();
+      // Fetch usage data via unified RPC
+      const { data: creditsResponse } = await supabase.rpc('get_my_credits');
+      const currentCredits = (creditsResponse?.[0] || {}) as any;
 
       setUsage({
-        credits_total: creditsData?.credits_total || 0,
-        plan: usageData?.plan || 'trial',
-        generations_used: usageData?.generations_used || 0
+        credits_total: currentCredits.credits_total || 0,
+        plan: currentCredits.plan || 'trial',
+        generations_used: currentCredits.credits_used_this_month || 0
       });
       setLoading(false);
     };

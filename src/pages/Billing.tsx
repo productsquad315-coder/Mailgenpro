@@ -115,7 +115,7 @@ const Billing = () => {
     const priceConfig: { [key: string]: { priceId: string; price: number } } = {
       'Starter': {
         priceId: isLifetimeToggle ? PADDLE_PRICES.STARTER_LIFETIME : PADDLE_PRICES.STARTER_MONTHLY,
-        price: isLifetimeToggle ? 59 : 11
+        price: isLifetimeToggle ? 59 : 19
       },
       'Pro': {
         priceId: PADDLE_PRICES.PRO_MONTHLY,

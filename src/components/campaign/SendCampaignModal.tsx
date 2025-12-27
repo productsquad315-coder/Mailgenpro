@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Send, AlertCircle, Zap, Loader2, Users, Mail } from "lucide-react";
+import { Send, AlertCircle, Zap, Loader2, Users, Mail, Calendar as CalendarIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ScheduleModal from "./ScheduleModal";
@@ -70,18 +70,15 @@ const SendCampaignModal = ({ campaign, open, onClose }: SendCampaignModalProps) 
 
             setLists(listsData || []);
 
-            // Fetch email credits
-            const { data: creditsData } = await supabase
-                .from('email_credits')
-                .select('credits_free, credits_paid, credits_total')
-                .eq('user_id', user.id)
-                .single();
+            // Fetch email credits via unified RPC
+            const { data: creditsResponse } = await supabase.rpc('get_my_credits');
+            const currentCredits = (creditsResponse?.[0] || {}) as any;
 
-            if (creditsData) {
+            if (currentCredits) {
                 setCredits({
-                    free: creditsData.credits_free || 0,
-                    paid: creditsData.credits_paid || 0,
-                    total: creditsData.credits_total || 0,
+                    free: currentCredits.credits_free || 0,
+                    paid: currentCredits.credits_paid || 0,
+                    total: currentCredits.credits_total || 0,
                 });
             }
         } catch (error) {
