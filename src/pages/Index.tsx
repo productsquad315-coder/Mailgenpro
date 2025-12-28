@@ -260,40 +260,54 @@ const Index = () => {
       {/* Footer */}
       <footer className="border-t border-border/50 py-16 relative glass-card">
         <div className="container mx-auto px-6 lg:px-12">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="flex items-center gap-3">
-              <img
-                src={mailgenproIcon}
-                alt="Mailgenpro"
-                className="w-8 h-8"
-              />
-              <span className="font-bold text-xl">Mailgenpro</span>
+          <div className="grid md:grid-cols-4 gap-12 mb-12">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <img
+                  src={mailgenproIcon}
+                  alt="Mailgenpro"
+                  className="w-8 h-8"
+                />
+                <span className="font-bold text-xl">Mailgenpro</span>
+              </div>
+              <p className="text-sm text-muted-foreground max-w-xs">
+                Helping founders and sales teams write high-converting cold emails in seconds.
+              </p>
             </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-10 text-sm">
-              <a
-                href="mailto:teamMailgenpro@gmail.com"
-                className="text-muted-foreground hover:text-primary transition-colors"
-              >
-                Support
-              </a>
-              <a
-                href="/terms"
-                className="text-muted-foreground hover:text-primary transition-colors"
-              >
-                Terms
-              </a>
-              <a
-                href="/privacy"
-                className="text-muted-foreground hover:text-primary transition-colors"
-              >
-                Privacy
-              </a>
+            <div>
+              <h3 className="font-semibold mb-4">Product</h3>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li><Link to="/about" className="hover:text-primary transition-colors">About</Link></li>
+                <li><Link to="/faq" className="hover:text-primary transition-colors">FAQ</Link></li>
+                <li><Link to="/#pricing" className="hover:text-primary transition-colors">Pricing</Link></li>
+              </ul>
             </div>
 
-            <p className="text-sm text-muted-foreground">
-              © 2025 Mailgenpro
-            </p>
+            <div>
+              <h3 className="font-semibold mb-4">Use Cases</h3>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li><Link to="/use-cases/founders" className="hover:text-primary transition-colors">For Founders</Link></li>
+                <li><Link to="/use-cases/sales" className="hover:text-primary transition-colors">For Sales Teams</Link></li>
+                <li><Link to="/use-cases/recruiters" className="hover:text-primary transition-colors">For Recruiters</Link></li>
+                <li><Link to="/use-cases/freelancers" className="hover:text-primary transition-colors">For Freelancers</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-4">Resources</h3>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li><Link to="/comparisons/chatgpt" className="hover:text-primary transition-colors">vs ChatGPT</Link></li>
+                <li><Link to="/comparisons/copy-ai" className="hover:text-primary transition-colors">vs Copy.ai</Link></li>
+                <li><Link to="/terms" className="hover:text-primary transition-colors">Terms of Service</Link></li>
+                <li><Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link></li>
+                <li><a href="mailto:teamMailgenpro@gmail.com" className="hover:text-primary transition-colors">Support</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-t border-border/50 pt-8 text-center text-sm text-muted-foreground">
+            <p>© 2025 MailGenPro. All rights reserved.</p>
           </div>
         </div>
       </footer>
