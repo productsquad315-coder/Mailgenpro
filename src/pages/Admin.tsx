@@ -138,18 +138,21 @@ const Admin = () => {
 
             toast.success(`Successfully added ${credits} credits to ${selectedUser.email}`);
 
-            // Refresh user data from email_credits
-            const { data: creditsData } = await supabase
-                .from("email_credits")
-                .select("credits_total")
+            // Refresh user data from user_usage
+            const { data: usageData } = await supabase
+                .from("user_usage")
+                .select("*")
                 .eq("user_id", selectedUser.id)
                 .single();
 
-            if (creditsData) {
+            if (usageData) {
+                const total = (usageData.generations_limit || 0) + (usageData.topup_credits || 0) - (usageData.generations_used || 0);
                 setSelectedUser({
                     ...selectedUser,
-                    credits_total: creditsData.credits_total || 0,
-                    topup_credits: creditsData.credits_total || 0, // Keep for UI compatibility
+                    generations_used: usageData.generations_used,
+                    topup_credits: usageData.topup_credits || 0,
+                    // Note: 'credits_total' does not strictly exist on selectedUser type (UserData) so I won't set it,
+                    // but the Admin state logic seems to rely on re-rendering with topup_credits updated.
                 });
             }
 

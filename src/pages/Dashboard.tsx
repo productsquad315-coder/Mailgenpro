@@ -67,9 +67,10 @@ const Dashboard = () => {
         {
           event: "*",
           schema: "public",
-          table: "email_credits",
+          table: "user_usage",
         },
         () => {
+          console.log("Credit update received, refetching...");
           fetchCredits();
         }
       )

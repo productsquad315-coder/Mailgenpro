@@ -27,7 +27,7 @@ const DashboardSidebar = () => {
       .channel("sidebar_credits")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "email_credits" },
+        { event: "*", schema: "public", table: "user_usage" },
         () => fetchCredits()
       )
       .subscribe();

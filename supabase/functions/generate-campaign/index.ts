@@ -112,12 +112,9 @@ serve(async (req) => {
 
     // Check credit balance ONLY for authenticated users with owned campaigns
     if (user && campaign.user_id) {
-      console.log("Checking credit balance for user:", user.id);
+      console.log("Checking credit balance via RPC for user:", user.id);
       const { data: creditsData, error: creditsError } = await serviceClient
-        .from("email_credits")
-        .select("credits_total")
-        .eq("user_id", user.id)
-        .single();
+        .rpc('get_my_credits');
 
       if (creditsError) {
         console.error("Error fetching credit balance:", creditsError);
@@ -127,7 +124,8 @@ serve(async (req) => {
         );
       }
 
-      const creditsRemaining = creditsData?.credits_total || 0;
+      // get_my_credits returns [{ credits_total, ... }]
+      const creditsRemaining = creditsData?.[0]?.credits_total || 0;
 
       if (creditsRemaining <= 0) {
         console.error("Insufficient credits for user:", user.id);

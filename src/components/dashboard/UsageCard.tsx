@@ -39,29 +39,12 @@ const UsageCard = ({ userId }: UsageCardProps) => {
         {
           event: "*",
           schema: "public",
-          table: "email_credits",
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          if (payload.new && typeof payload.new === "object") {
-            const newData = payload.new as any;
-            setCreditsRemaining(newData.credits_total || 0);
-          }
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
           table: "user_usage",
           filter: `user_id=eq.${userId}`,
         },
-        (payload) => {
-          if (payload.new && typeof payload.new === "object") {
-            const newData = payload.new as any;
-            setPlan(newData.plan);
-          }
+        () => {
+          // When user_usage changes, refetch everything via RPC to ensure consistent logic
+          fetchUsage();
         }
       )
       .subscribe();

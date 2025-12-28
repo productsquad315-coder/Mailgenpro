@@ -124,13 +124,9 @@ const CreateCampaign = () => {
 
       // For authenticated users, check credit balance
       if (userId) {
-        const { data: creditsData } = await supabase
-          .from("email_credits")
-          .select("credits_total")
-          .eq("user_id", userId)
-          .single();
-
-        const creditsRemaining = creditsData?.credits_total || 0;
+        const { data: creditsData } = await supabase.rpc('get_my_credits');
+        const row = creditsData?.[0] as any;
+        const creditsRemaining = row?.credits_total || 0;
 
         if (creditsRemaining <= 0) {
           setShowOutOfCreditsModal(true);
