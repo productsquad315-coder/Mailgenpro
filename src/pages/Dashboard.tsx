@@ -104,29 +104,54 @@ const Dashboard = () => {
       <DashboardSidebar />
 
       <div className="flex-1 lg:ml-64">
-        <div className="sticky top-0 bg-card border-b">
-          <div className="px-6 py-4 flex justify-between items-center">
-            <MobileSidebar />
-
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/10">
-                <Gem className="w-4 h-4 text-primary" />
-                <span className="font-semibold">{creditsRemaining}</span>
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="py-4 flex justify-between items-center">
+              {/* Mobile Sidebar Toggle */}
+              <div className="lg:hidden">
+                <MobileSidebar />
               </div>
 
-              <Button onClick={() => navigate("/create-campaign")}>
-                <Plus className="w-4 h-4 mr-2" />
-                New
-              </Button>
+              {/* Desktop: Empty space for balance */}
+              <div className="hidden lg:block" />
 
-              <Avatar onClick={() => navigate("/profile")}>
-                <AvatarFallback>{initials}</AvatarFallback>
-              </Avatar>
+              {/* Right Side Actions */}
+              <div className="flex items-center gap-3">
+                {/* Credits Display */}
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
+                  <Gem className="w-4 h-4 text-primary" />
+                  <span className="font-semibold text-sm">{creditsRemaining}</span>
+                  <span className="text-xs text-muted-foreground hidden sm:inline">credits</span>
+                </div>
+
+                {/* New Campaign Button */}
+                <Button
+                  onClick={() => navigate("/create-campaign")}
+                  className="gap-2"
+                  size="default"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">New Campaign</span>
+                  <span className="sm:hidden">New</span>
+                </Button>
+
+                {/* User Avatar */}
+                <Avatar
+                  onClick={() => navigate("/profile")}
+                  className="cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all"
+                >
+                  <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="p-8">
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <CampaignsList userId={user.id} />
           </motion.div>
