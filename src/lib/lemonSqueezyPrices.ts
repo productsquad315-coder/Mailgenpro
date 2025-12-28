@@ -7,16 +7,16 @@
 
 // Subscription Plans
 export const LEMON_SQUEEZY_PRICES = {
-    // Monthly and Lifetime Subscriptions
-    STARTER_MONTHLY: import.meta.env.VITE_LEMON_SQUEEZY_VARIANT_STARTER_MONTHLY || '747603', // $11 Starter
-    STARTER_LIFETIME: import.meta.env.VITE_LEMON_SQUEEZY_VARIANT_STARTER_LIFETIME || '747620', // $59 Lifetime
-    PRO_MONTHLY: import.meta.env.VITE_LEMON_SQUEEZY_VARIANT_PRO_MONTHLY || '747619', // $29 Pro
+    // Subscription Plans
+    STARTER_MONTHLY: import.meta.env.VITE_LEMON_SQUEEZY_VARIANT_STARTER_MONTHLY || '46d3f0da-1cf9-4792-ac3a-9c87b2ec0983', // $11 Starter
+    STARTER_LIFETIME: import.meta.env.VITE_LEMON_SQUEEZY_VARIANT_STARTER_LIFETIME || '0453c288-2c07-4294-9106-52c7ae30586c', // $59 Lifetime
+    PRO_MONTHLY: import.meta.env.VITE_LEMON_SQUEEZY_VARIANT_PRO_MONTHLY || '38f7c2be-79cc-4c56-b75c-fccc7eeba296', // $29 Pro
 
     // One-Time Credit Packs
-    PACK_STARTER: import.meta.env.VITE_LEMON_SQUEEZY_VARIANT_PACK_STARTER || '747623', // $5 Starter Pack
-    PACK_GROWTH: import.meta.env.VITE_LEMON_SQUEEZY_VARIANT_PACK_GROWTH || '747624', // $12 Growth Pack
-    PACK_PRO: import.meta.env.VITE_LEMON_SQUEEZY_VARIANT_PACK_PRO || '747625', // $25 Pro Pack
-    PACK_AGENCY: import.meta.env.VITE_LEMON_SQUEEZY_VARIANT_PACK_AGENCY || '747626', // $60 Agency Pack
+    PACK_STARTER: import.meta.env.VITE_LEMON_SQUEEZY_VARIANT_PACK_STARTER || 'c0ab2221-a2e3-4e31-971f-f237c1b9e5a6', // $5 Starter Pack
+    PACK_GROWTH: import.meta.env.VITE_LEMON_SQUEEZY_VARIANT_PACK_GROWTH || '64065f4a-27c1-4a06-8582-47b5ad38fa28', // $12 Growth Pack
+    PACK_PRO: import.meta.env.VITE_LEMON_SQUEEZY_VARIANT_PACK_PRO || '9d4ae459-b744-45c7-b7b9-25e361deb92e', // $25 Pro Pack
+    PACK_AGENCY: import.meta.env.VITE_LEMON_SQUEEZY_VARIANT_PACK_AGENCY || 'd6306281-f80a-4038-bd1e-a3b82bdfb40e', // $60 Agency Pack
 } as const;
 
 // Plan metadata for UI display

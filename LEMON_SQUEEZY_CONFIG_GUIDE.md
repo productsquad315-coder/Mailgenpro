@@ -41,6 +41,7 @@ You will need the **Variant ID** for each product to create "Buy Now" buttons in
 2. Click on a product.
 3. Click **Share** (top right).
 4. Copy the URL. It looks like: `https://yourstore.lemonsqueezy.com/checkout/buy/VARIANT_ID`.
+   > **Note:** Ensure you copy the **Checkout Link** (which contains the Variant ID), NOT the browser URL when editing the product (which contains the Product ID).
 5. Save these **Variant IDs** for:
    - Starter Plan
    - Pro Plan
