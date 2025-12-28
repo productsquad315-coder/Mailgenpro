@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Zap, ShoppingCart } from "lucide-react";
 import { motion } from "framer-motion";
-import { openPaddleCheckout } from "@/lib/paddle";
-import { PADDLE_PRICES } from "@/lib/paddlePrices";
+import { openLemonSqueezyCheckout } from "@/lib/lemonSqueezy";
+import { LEMON_SQUEEZY_PRICES } from "@/lib/lemonSqueezyPrices";
 import { toast } from "sonner";
 
 interface CreditPack {
@@ -22,14 +22,14 @@ const creditPacks: CreditPack[] = [
     name: "Starter Pack",
     price: 5,
     credits: 40,
-    priceId: PADDLE_PRICES.PACK_STARTER,
+    priceId: LEMON_SQUEEZY_PRICES.PACK_STARTER,
   },
   {
     id: "growth",
     name: "Growth Pack",
     price: 12,
     credits: 120,
-    priceId: PADDLE_PRICES.PACK_GROWTH,
+    priceId: LEMON_SQUEEZY_PRICES.PACK_GROWTH,
     popular: true,
   },
   {
@@ -37,14 +37,14 @@ const creditPacks: CreditPack[] = [
     name: "Pro Pack",
     price: 25,
     credits: 300,
-    priceId: PADDLE_PRICES.PACK_PRO,
+    priceId: LEMON_SQUEEZY_PRICES.PACK_PRO,
   },
   {
     id: "agency",
     name: "Agency Pack",
     price: 60,
     credits: 800,
-    priceId: PADDLE_PRICES.PACK_AGENCY,
+    priceId: LEMON_SQUEEZY_PRICES.PACK_AGENCY,
   },
 ];
 
@@ -55,7 +55,7 @@ interface CreditPacksProps {
 const CreditPacks = ({ userId }: CreditPacksProps) => {
   const handleBuyNow = async (pack: CreditPack) => {
     try {
-      await openPaddleCheckout(pack.priceId, userId);
+      await openLemonSqueezyCheckout(pack.priceId, userId);
     } catch (error) {
       console.error('Checkout error:', error);
       toast.error('Failed to open checkout. Please try again.');

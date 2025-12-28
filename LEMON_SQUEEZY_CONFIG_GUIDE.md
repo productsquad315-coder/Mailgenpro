@@ -6,8 +6,8 @@ To complete the billing integration, you'll need to gather the following details
 
 | Item | Where to find it | Purpose |
 |------|------------------|---------|
-| **Store ID** | Settings > Stores | Used for creating checkout links. |
-| **Webhook Secret** | Settings > Webhooks (after creating one) | Used to verify payments are genuine. |
+| **Store ID** | Settings > Stores | Your Store ID is **263393**. Used typically for internal reference or API calls. |
+| **Webhook Secret** | Settings > Webhooks (after creating one) | **CRITICAL for Webhook:** Used to verify payments are genuine. |
 | **API Key** | Settings > API | (Optional) For fetching subscription details later. |
 
 ## 2. Product Setup (Critical!)
@@ -51,9 +51,10 @@ You will need the **Variant ID** for each product to create "Buy Now" buttons in
 
 1. Go to **Settings > Webhooks**.
 2. Click **+ New Webhook**.
-3. **Callback URL:** `[YOUR_SUPABASE_URL]/functions/v1/lemon-squeezy-webhook`
-   *(You can find your Supabase URL in the dashboard or `.env` file)*
+3. **Callback URL:** `https://qijgrzfedoknlgljsykaw.supabase.co/functions/v1/lemon-squeezy-webhook`
+   *(This is your specific Supabase webhook endpoint)*
 4. **Signing Secret:** Copy this! You'll need it for the `LEMON_SQUEEZY_WEBHOOK_SECRET`.
+   > **Note about Store ID (263393):** You do not need to enter your Store ID in the webhook settings. The *Signing Secret* is what links the webhook to your store securely.
 5. **Events:** Check these:
    - `order_created`
    - `subscription_created`
@@ -62,6 +63,21 @@ You will need the **Variant ID** for each product to create "Buy Now" buttons in
    - `subscription_expired`
    - `subscription_resumed`
 6. Click **Save Webhook**.
+> **⚠️ IMPORTANT:** Do **NOT** paste your "API Key" (the long `eyJ...` string) into the **Signing Secret** field.
+> *   **Signing Secret**: You make this up (e.g., `my-secure-webhook-password-123`).
+> *   **API Key**: Used for the backend to talk to Lemon Squeezy (optional but recommended).
+
+## 5. Saving Your Secrets (Supabase)
+
+Run these commands in your terminal to save the secrets securely:
+
+```bash
+# 1. The password you made up for the Webhook 'Signing Secret'
+npx supabase secrets set LEMON_SQUEEZY_WEBHOOK_SECRET="replace-with-your-chosen-password"
+
+# 2. The long API Key you just generated (starts with eyJ...)
+npx supabase secrets set LEMON_SQUEEZY_API_KEY="paste-your-long-token-here"
+```
 
 ## Next Steps
 

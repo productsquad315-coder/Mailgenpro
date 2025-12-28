@@ -7,8 +7,8 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { trackPlanUpgrade, trackButtonClick } from "@/lib/analytics";
-import { openPaddleCheckout } from "@/lib/paddle";
-import { PADDLE_PRICES } from "@/lib/paddlePrices";
+import { openLemonSqueezyCheckout } from "@/lib/lemonSqueezy";
+import { LEMON_SQUEEZY_PRICES } from "@/lib/lemonSqueezyPrices";
 
 const PricingSection = () => {
   const [isLifetime, setIsLifetime] = useState(false);
@@ -25,9 +25,9 @@ const PricingSection = () => {
 
     try {
       if (userId) {
-        await openPaddleCheckout(priceId, userId);
+        await openLemonSqueezyCheckout(priceId, userId);
       } else {
-        await openPaddleCheckout(priceId);
+        await openLemonSqueezyCheckout(priceId);
       }
     } catch (error) {
       console.error('Checkout error:', error);
@@ -50,7 +50,7 @@ const PricingSection = () => {
       cta: "Get Started",
       popular: true,
       showToggle: true,
-      priceId: isLifetime ? PADDLE_PRICES.STARTER_LIFETIME : PADDLE_PRICES.STARTER_MONTHLY,
+      priceId: isLifetime ? LEMON_SQUEEZY_PRICES.STARTER_LIFETIME : LEMON_SQUEEZY_PRICES.STARTER_MONTHLY,
       priceValue: isLifetime ? 59 : 11
     },
     {
@@ -66,7 +66,7 @@ const PricingSection = () => {
       ],
       cta: "Go Pro",
       popular: false,
-      priceId: PADDLE_PRICES.PRO_MONTHLY,
+      priceId: LEMON_SQUEEZY_PRICES.PRO_MONTHLY,
       priceValue: 29
     }
   ];

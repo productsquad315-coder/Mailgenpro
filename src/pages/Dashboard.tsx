@@ -54,7 +54,7 @@ const Dashboard = () => {
       }
 
       // 🔥 Initialize + fetch credits
-      await supabase.rpc("initialize_free_trial");
+      // The trigger handles initialization now
       await fetchCredits();
       setLoading(false);
     });

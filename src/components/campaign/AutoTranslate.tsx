@@ -6,8 +6,8 @@ import { Globe, Lock, Crown } from "lucide-react";
 import { toast } from "sonner";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import { supabase } from "@/integrations/supabase/client";
-import { openPaddleCheckout } from "@/lib/paddle";
-import { PADDLE_PRICES } from "@/lib/paddlePrices";
+import { openLemonSqueezyCheckout } from "@/lib/lemonSqueezy";
+import { LEMON_SQUEEZY_PRICES } from "@/lib/lemonSqueezyPrices";
 
 interface AutoTranslateProps {
   campaignId: string;
@@ -164,9 +164,9 @@ const AutoTranslate = ({ campaignId }: AutoTranslateProps) => {
                   try {
                     const { data: { user } } = await supabase.auth.getUser();
                     if (user) {
-                      await openPaddleCheckout(PADDLE_PRICES.PRO_MONTHLY, user.id, user.email);
+                      await openLemonSqueezyCheckout(LEMON_SQUEEZY_PRICES.PRO_MONTHLY, user.id, user.email);
                     } else {
-                      await openPaddleCheckout(PADDLE_PRICES.PRO_MONTHLY);
+                      await openLemonSqueezyCheckout(LEMON_SQUEEZY_PRICES.PRO_MONTHLY);
                     }
                   } catch (error) {
                     console.error('Checkout error:', error);

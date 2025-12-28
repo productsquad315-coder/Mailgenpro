@@ -8,8 +8,8 @@ import { Check, Sparkles, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { trackPlanUpgrade } from "@/lib/analytics";
-import { openPaddleCheckout } from "@/lib/paddle";
-import { PADDLE_PRICES } from "@/lib/paddlePrices";
+import { openLemonSqueezyCheckout } from "@/lib/lemonSqueezy";
+import { LEMON_SQUEEZY_PRICES } from "@/lib/lemonSqueezyPrices";
 
 const ChoosePlan = () => {
   const navigate = useNavigate();
@@ -33,9 +33,9 @@ const ChoosePlan = () => {
 
     try {
       if (userId) {
-        await openPaddleCheckout(priceId, userId);
+        await openLemonSqueezyCheckout(priceId, userId);
       } else {
-        await openPaddleCheckout(priceId);
+        await openLemonSqueezyCheckout(priceId);
       }
     } catch (error) {
       console.error('Checkout error:', error);
@@ -68,7 +68,7 @@ const ChoosePlan = () => {
       ],
       popular: !isLifetime,
       showToggle: true,
-      priceId: isLifetime ? PADDLE_PRICES.STARTER_LIFETIME : PADDLE_PRICES.STARTER_MONTHLY,
+      priceId: isLifetime ? LEMON_SQUEEZY_PRICES.STARTER_LIFETIME : LEMON_SQUEEZY_PRICES.STARTER_MONTHLY,
       priceValue: isLifetime ? 59 : 11
     },
     {
@@ -83,7 +83,7 @@ const ChoosePlan = () => {
         "Priority AI & early access"
       ],
       popular: false,
-      priceId: PADDLE_PRICES.PRO_MONTHLY,
+      priceId: LEMON_SQUEEZY_PRICES.PRO_MONTHLY,
       priceValue: 29
     }
   ];

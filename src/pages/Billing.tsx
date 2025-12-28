@@ -14,8 +14,8 @@ import MobileSidebar from "@/components/dashboard/MobileSidebar";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import { trackPlanUpgrade, trackButtonClick } from "@/lib/analytics";
 import CreditPacks from "@/components/billing/CreditPacks";
-import { openPaddleCheckout } from "@/lib/paddle";
-import { PADDLE_PRICES } from "@/lib/paddlePrices";
+import { openLemonSqueezyCheckout } from "@/lib/lemonSqueezy";
+import { LEMON_SQUEEZY_PRICES } from "@/lib/lemonSqueezyPrices";
 
 const Billing = () => {
   const navigate = useNavigate();
@@ -104,7 +104,7 @@ const Billing = () => {
     trackPlanUpgrade(planName, price);
 
     try {
-      await openPaddleCheckout(priceId, user.id, user.email);
+      await openLemonSqueezyCheckout(priceId, user.id, user.email);
     } catch (error) {
       console.error('Checkout error:', error);
       toast.error('Failed to open checkout. Please try again.');
@@ -114,11 +114,11 @@ const Billing = () => {
   const handleUpgrade = (planName: string) => {
     const priceConfig: { [key: string]: { priceId: string; price: number } } = {
       'Starter': {
-        priceId: isLifetimeToggle ? PADDLE_PRICES.STARTER_LIFETIME : PADDLE_PRICES.STARTER_MONTHLY,
+        priceId: isLifetimeToggle ? LEMON_SQUEEZY_PRICES.STARTER_LIFETIME : LEMON_SQUEEZY_PRICES.STARTER_MONTHLY,
         price: isLifetimeToggle ? 59 : 19
       },
       'Pro': {
-        priceId: PADDLE_PRICES.PRO_MONTHLY,
+        priceId: LEMON_SQUEEZY_PRICES.PRO_MONTHLY,
         price: 29
       }
     };
@@ -133,14 +133,15 @@ const Billing = () => {
     try {
       const { data: usageData } = await supabase
         .from('user_usage')
-        .select('paddle_customer_id')
+        .select('lemonsqueezy_customer_id')
         .eq('user_id', user?.id)
-        .maybeSingle(); // Use maybeSingle to avoid 406/error if record is missing
+        .maybeSingle();
 
-      if ((usageData as any)?.paddle_customer_id) {
-        // Paddle customer portal - users can manage subscriptions at paddle.com
-        window.open(`https://vendors.paddle.com/subscriptions/customers`, '_blank');
-        toast.info('Manage your subscription in the Paddle portal');
+      if ((usageData as any)?.lemonsqueezy_customer_id) {
+        // Lemon Squeezy simplified customer portal
+        // Alternatively, use: https://app.lemonsqueezy.com/my-orders
+        window.open(`https://app.lemonsqueezy.com/my-orders`, '_blank');
+        toast.info('Manage your subscription in the Lemon Squeezy portal');
       } else {
         toast.error('No subscription found');
       }

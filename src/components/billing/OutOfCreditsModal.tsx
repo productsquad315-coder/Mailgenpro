@@ -6,8 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { useState } from "react";
 import type { CarouselApi } from "@/components/ui/carousel";
-import { openPaddleCheckout } from "@/lib/paddle";
-import { PADDLE_PRICES } from "@/lib/paddlePrices";
+import { openLemonSqueezyCheckout } from "@/lib/lemonSqueezy";
+import { LEMON_SQUEEZY_PRICES } from "@/lib/lemonSqueezyPrices";
 import { toast } from "sonner";
 
 interface OutOfCreditsModalProps {
@@ -42,14 +42,14 @@ const OutOfCreditsModal = ({ open, onClose, userId }: OutOfCreditsModalProps) =>
       name: "Starter Pack",
       price: 5,
       credits: 40,
-      priceId: PADDLE_PRICES.PACK_STARTER
+      priceId: LEMON_SQUEEZY_PRICES.PACK_STARTER
     },
     {
       id: 1,
       name: "Growth Pack",
       price: 12,
       credits: 120,
-      priceId: PADDLE_PRICES.PACK_GROWTH,
+      priceId: LEMON_SQUEEZY_PRICES.PACK_GROWTH,
       popular: true
     },
     {
@@ -57,14 +57,14 @@ const OutOfCreditsModal = ({ open, onClose, userId }: OutOfCreditsModalProps) =>
       name: "Pro Pack",
       price: 25,
       credits: 300,
-      priceId: PADDLE_PRICES.PACK_PRO
+      priceId: LEMON_SQUEEZY_PRICES.PACK_PRO
     },
     {
       id: 3,
       name: "Agency Pack",
       price: 60,
       credits: 800,
-      priceId: PADDLE_PRICES.PACK_AGENCY
+      priceId: LEMON_SQUEEZY_PRICES.PACK_AGENCY
     }
   ];
 
@@ -75,7 +75,7 @@ const OutOfCreditsModal = ({ open, onClose, userId }: OutOfCreditsModalProps) =>
       description: "For growing businesses",
       icon: CreditCard,
       color: "from-primary to-accent",
-      priceId: PADDLE_PRICES.STARTER_MONTHLY,
+      priceId: LEMON_SQUEEZY_PRICES.STARTER_MONTHLY,
       features: ["150 credits per month", "Remove watermark", "Priority AI speed", "Email support"],
       popular: true
     },
@@ -85,7 +85,7 @@ const OutOfCreditsModal = ({ open, onClose, userId }: OutOfCreditsModalProps) =>
       description: "For power users",
       icon: Crown,
       color: "from-accent to-primary",
-      priceId: PADDLE_PRICES.PRO_MONTHLY,
+      priceId: LEMON_SQUEEZY_PRICES.PRO_MONTHLY,
       features: ["500 credits per month", "Everything in Starter", "Auto-Translate", "Priority AI & early access"]
     },
     {
@@ -94,7 +94,7 @@ const OutOfCreditsModal = ({ open, onClose, userId }: OutOfCreditsModalProps) =>
       description: "For growing businesses",
       icon: Sparkles,
       color: "from-primary to-accent",
-      priceId: PADDLE_PRICES.STARTER_LIFETIME,
+      priceId: LEMON_SQUEEZY_PRICES.STARTER_LIFETIME,
       features: ["150 credits per month", "Remove watermark", "Priority AI speed", "Email support"],
       isLifetime: true
     }
@@ -102,7 +102,7 @@ const OutOfCreditsModal = ({ open, onClose, userId }: OutOfCreditsModalProps) =>
 
   const handleCheckout = async (priceId: string) => {
     try {
-      await openPaddleCheckout(priceId, userId);
+      await openLemonSqueezyCheckout(priceId, userId);
     } catch (error) {
       console.error('Checkout error:', error);
       toast.error('Failed to open checkout. Please try again.');
