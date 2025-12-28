@@ -50,12 +50,9 @@ serve(async (req) => {
       auth: { persistSession: false },
     });
 
-    // Check credit balance
-    const { data: creditsData, error: creditsError } = await serviceClient
-      .from("email_credits")
-      .select("credits_total")
-      .eq("user_id", user.id)
-      .single();
+    // Check credit balance via RPC
+    const { data: creditsData, error: creditsError } = await supabaseClient
+      .rpc('get_my_credits');
 
     if (creditsError) {
       console.error("Error fetching credit balance:", creditsError);
@@ -65,7 +62,10 @@ serve(async (req) => {
       );
     }
 
-    if ((creditsData?.credits_total || 0) <= 0) {
+    // get_my_credits returns [{ credits_total, ... }]
+    const creditsRemaining = creditsData?.[0]?.credits_total || 0;
+
+    if (creditsRemaining <= 0) {
       console.error("Insufficient credits for user:", user.id);
       return new Response(
         JSON.stringify({

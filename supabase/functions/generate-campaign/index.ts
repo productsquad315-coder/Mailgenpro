@@ -23,6 +23,7 @@ serve(async (req) => {
     // Check for authentication (optional for guest campaigns)
     const authHeader = req.headers.get("Authorization");
     let user = null;
+    let supabaseClient = null;
 
     console.log("Request received, auth header present:", !!authHeader);
 
@@ -31,7 +32,7 @@ serve(async (req) => {
       const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
       const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-      const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
         global: { headers: { Authorization: authHeader } },
       });
 
@@ -113,7 +114,8 @@ serve(async (req) => {
     // Check credit balance ONLY for authenticated users with owned campaigns
     if (user && campaign.user_id) {
       console.log("Checking credit balance via RPC for user:", user.id);
-      const { data: creditsData, error: creditsError } = await serviceClient
+      // Use supabaseClient (with auth context) instead of serviceClient so auth.uid() works in RPC
+      const { data: creditsData, error: creditsError } = await supabaseClient
         .rpc('get_my_credits');
 
       if (creditsError) {
@@ -524,6 +526,39 @@ Instead, use these HIGH-VALUE TACTICS to expand:
    - You must identify the "Secret Sauce" of this product. Give it a name if it doesn't have one.
    - Explain WHY it works so the user believes the promise.
 
+=== SPAM AVOIDANCE & DELIVERABILITY RULES ===
+CRITICAL: These emails must reach the inbox, not spam folder.
+
+BANNED SPAM TRIGGER WORDS (Never use these):
+- "Free", "Act now", "Limited time offer", "Click here", "Buy now"
+- "Guaranteed", "No risk", "Winner", "Congratulations", "You've been selected"
+- "Urgent", "Hurry", "Don't miss out", "Once in a lifetime"
+- "Cash", "Prize", "Bonus", "$$$", "Make money", "Earn extra income"
+- "Miracle", "Amazing", "Incredible offer"
+
+SUBJECT LINE RULES:
+- Keep under 50 characters
+- NO ALL CAPS
+- Maximum 1 exclamation mark (prefer none)
+- Avoid numbers and symbols (%, $, !)
+- Make it conversational, not salesy
+- Good: "Quick thought about your workflow"
+- Bad: "FREE OFFER! 50% OFF! ACT NOW!!!"
+
+FORMATTING RULES:
+- Use proper capitalization (not ALL CAPS)
+- Limit exclamation marks to 1 per email
+- No excessive punctuation (!!!, ???)
+- Keep paragraphs short (2-3 sentences max)
+- Use natural, conversational language
+
+CONTENT AUTHENTICITY:
+- Write like a real person, not a marketing bot
+- Include specific details (not vague promises)
+- Use "I" and "you" (personal pronouns)
+- Admit small flaws or limitations (builds trust)
+- No exaggerated claims or hype
+
 === THE "ANTI-ROBOT" FIREWALL (STRICT BANS) ===
 If you use any of these phrases, you will be DELETED.
 - "In today's fast-paced world"
@@ -673,8 +708,14 @@ EXECUTE.`;
 
     // Deduct credits using consolidated function
     if (user && campaign.user_id) {
+      console.log(`Deducting ${emailsData.emails.length} credits for user ${user.id}`);
       for (let i = 0; i < emailsData.emails.length; i++) {
-        await serviceClient.rpc('deduct_email_credit', { p_user_id: user.id });
+        const { data: success, error: deductError } = await serviceClient.rpc('deduct_email_credit', { p_user_id: user.id });
+        if (deductError) {
+          console.error(`Failed to deduct credit ${i + 1}:`, deductError);
+        } else {
+          console.log(`Deduction ${i + 1}/${emailsData.emails.length} success:`, success);
+        }
       }
     }
 
