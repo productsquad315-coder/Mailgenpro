@@ -103,13 +103,18 @@ const Dashboard = () => {
     <div className="min-h-screen flex bg-background">
       <DashboardSidebar />
 
-      <div className="flex-1">
+      <div className="flex-1 lg:ml-64">
         {/* Header */}
         <div className="sticky top-0 z-10 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="px-6 lg:px-8">
             <div className="py-4 flex justify-between items-center">
-              {/* Sidebar Toggle - Always visible */}
-              <MobileSidebar />
+              {/* Sidebar Toggle - Mobile Only */}
+              <div className="lg:hidden">
+                <MobileSidebar />
+              </div>
+
+              {/* Desktop: Empty space */}
+              <div className="hidden lg:block" />
 
               {/* Right Side Actions */}
               <div className="flex items-center gap-3">
@@ -145,8 +150,8 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Main Content - Full Width */}
+        <div className="px-6 lg:px-8 py-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <CampaignsList userId={user.id} />
           </motion.div>

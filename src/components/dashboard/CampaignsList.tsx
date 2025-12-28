@@ -169,8 +169,8 @@ const CampaignsList = ({ userId }: CampaignsListProps) => {
         </Button>
       </div>
 
-      {/* Campaign Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Campaign Grid - Bigger cards, 2 columns max */}
+      <div className="grid md:grid-cols-2 gap-6">
         {campaigns.map((campaign, i) => (
           <motion.div
             key={campaign.id}
@@ -181,24 +181,24 @@ const CampaignsList = ({ userId }: CampaignsListProps) => {
             <Card className="group relative overflow-hidden border-2 border-border/50 hover:border-primary/50 transition-all duration-300 h-full flex flex-col">
               {/* Status Indicator Bar */}
               <div className={`absolute top-0 left-0 right-0 h-1 ${campaign.status === 'completed' ? 'bg-green-500' :
-                  campaign.status === 'analyzing' ? 'bg-blue-500' :
-                    campaign.status === 'pending' ? 'bg-yellow-500' :
-                      'bg-muted'
+                campaign.status === 'analyzing' ? 'bg-blue-500' :
+                  campaign.status === 'pending' ? 'bg-yellow-500' :
+                    'bg-muted'
                 }`} />
 
-              <div className="p-6 flex-1 flex flex-col">
+              <div className="p-8 flex-1 flex flex-col">
                 {/* Header */}
-                <div className="flex items-start justify-between mb-4">
+                <div className="flex items-start justify-between mb-6">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-lg mb-2 truncate group-hover:text-primary transition-colors">
+                    <h3 className="font-bold text-2xl mb-3 truncate group-hover:text-primary transition-colors">
                       {campaign.name}
                     </h3>
                     <Badge
                       variant="secondary"
-                      className={`${getStatusColor(campaign.status)} font-medium text-xs px-2.5 py-0.5`}
+                      className={`${getStatusColor(campaign.status)} font-medium text-sm px-3 py-1`}
                     >
                       {campaign.status === 'analyzing' && (
-                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                        <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
                       )}
                       {campaign.status}
                     </Badge>
@@ -206,29 +206,29 @@ const CampaignsList = ({ userId }: CampaignsListProps) => {
                 </div>
 
                 {/* URL */}
-                <div className="mb-4 flex-1">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-                    <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
+                <div className="mb-6 flex-1">
+                  <div className="flex items-center gap-2 text-base text-muted-foreground group-hover:text-foreground transition-colors">
+                    <ExternalLink className="w-4 h-4 flex-shrink-0" />
                     <span className="truncate font-medium">{campaign.url}</span>
                   </div>
                 </div>
 
                 {/* Meta Info */}
-                <div className="flex items-center justify-between text-xs text-muted-foreground mb-4 pb-4 border-b border-border/50">
+                <div className="flex items-center justify-between text-sm text-muted-foreground mb-6 pb-6 border-b border-border/50">
                   <span>Created {format(new Date(campaign.created_at), "MMM d, yyyy")}</span>
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                   <Button
                     variant="default"
-                    size="sm"
+                    size="lg"
                     className="flex-1 gap-2"
                     onClick={() => navigate(`/campaign/${campaign.id}`)}
                     disabled={campaign.status !== "completed"}
                   >
-                    <Eye className="w-4 h-4" />
-                    View
+                    <Eye className="w-5 h-5" />
+                    View Campaign
                   </Button>
 
                   <AlertDialog>
@@ -236,14 +236,14 @@ const CampaignsList = ({ userId }: CampaignsListProps) => {
                       <div onClick={(e) => e.stopPropagation()}>
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="lg"
                           className="hover:bg-destructive/10 hover:text-destructive"
                           disabled={deletingIds.has(campaign.id)}
                         >
                           {deletingIds.has(campaign.id) ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <Loader2 className="w-5 h-5 animate-spin" />
                           ) : (
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-5 h-5" />
                           )}
                         </Button>
                       </div>
