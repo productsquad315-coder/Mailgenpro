@@ -116,7 +116,5 @@ const Help = () => {
         </DashboardLayout>
     );
 };
-    );
-};
 
 export default Help;
