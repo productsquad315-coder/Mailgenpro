@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 import { SpotlightCard } from "@/components/ui/SpotlightCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -159,12 +160,11 @@ const CampaignsList = ({ userId }: CampaignsListProps) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: i * 0.05 }}
           >
-            <SpotlightCard className="group h-full flex flex-col relative overflow-hidden p-6 hover:translate-y-[-4px] transition-all duration-300">
-
-              {/* Status Accent Bar (Simple Green) */}
-              <div className={`absolute left-0 top-0 bottom-0 w-1 ${campaign.status === 'completed' ? 'bg-emerald-500 shadow-[2px_0_10px_rgba(16,185,129,0.2)]' :
-                  campaign.status === 'analyzing' ? 'bg-blue-500' : 'bg-zinc-700'
-                }`} />
+            <SpotlightCard className={cn(
+              "group h-full flex flex-col relative overflow-hidden p-6 hover:translate-y-[-4px] transition-all duration-300",
+              campaign.status === 'completed' ? 'border-l-4 border-l-emerald-500' :
+                campaign.status === 'analyzing' ? 'border-l-4 border-l-blue-500' : 'border-l-4 border-l-zinc-700'
+            )}>
 
               <div className="flex items-center justify-between mb-4">
                 <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
