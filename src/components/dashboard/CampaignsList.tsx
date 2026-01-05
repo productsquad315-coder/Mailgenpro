@@ -164,9 +164,6 @@ const CampaignsList = ({ userId }: CampaignsListProps) => {
 
               <div className="flex items-center justify-between mb-10">
                 <div className="flex flex-col gap-1">
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] opacity-40">
-                    Protocol Launch
-                  </span>
                   <span className="text-xs font-mono text-muted-foreground/60">
                     {format(new Date(campaign.created_at), "MMM d, yyyy")}
                   </span>
