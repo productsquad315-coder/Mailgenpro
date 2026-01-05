@@ -118,17 +118,12 @@ const CampaignsList = ({ userId }: CampaignsListProps) => {
 
   if (campaigns.length === 0) {
     return (
-      <SpotlightCard className="p-16 text-center flex flex-col items-center justify-center min-h-[400px]">
-        <JewelIcon icon={Zap} size="lg" color="orange" className="mb-8" />
-        <h3 className="text-3xl font-heading font-bold mb-2">Initialize Protocol</h3>
-        <p className="text-muted-foreground mb-8 text-lg max-w-lg mx-auto">
-          No active campaigns detected in the system. Launch your first sequence to begin.
-        </p>
-        <Button onClick={() => navigate("/create-campaign")} className="btn-premium px-8 py-6 text-lg rounded-xl">
-          <Plus className="w-5 h-5 mr-2" />
+      <div className="flex flex-col items-center justify-center min-h-[400px]">
+        <Button onClick={() => navigate("/create-campaign")} className="btn-premium px-12 py-8 text-xl rounded-2xl shadow-2xl hover:scale-105 transition-all">
+          <Plus className="w-6 h-6 mr-3" />
           Create First Campaign
         </Button>
-      </SpotlightCard>
+      </div>
     );
   }
 
