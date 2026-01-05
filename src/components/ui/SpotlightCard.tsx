@@ -1,60 +1,36 @@
 
-import { useRef, useState, MouseEvent } from "react";
 import { cn } from "@/lib/utils";
 
 interface SpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
     children: React.ReactNode;
     className?: string;
-    spotlightColor?: string;
+    spotlightColor?: string; // Kept for backward compatibility but unused or repurposed
 }
 
 export const SpotlightCard = ({
     children,
     className,
-    spotlightColor = "rgba(124, 58, 237, 0.15)",
+    spotlightColor,
     ...props
 }: SpotlightCardProps) => {
-    const divRef = useRef<HTMLDivElement>(null);
-    const [position, setPosition] = useState({ x: 0, y: 0 });
-    const [opacity, setOpacity] = useState(0);
-
-    const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
-        if (!divRef.current) return;
-
-        const div = divRef.current;
-        const rect = div.getBoundingClientRect();
-
-        setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-    };
-
-    const handleMouseEnter = () => {
-        setOpacity(1);
-    };
-
-    const handleMouseLeave = () => {
-        setOpacity(0);
-    };
-
     return (
         <div
-            ref={divRef}
-            onMouseMove={handleMouseMove}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
             className={cn(
-                "relative rounded-xl border border-white/10 bg-card/40 text-card-foreground shadow-sm overflow-hidden backdrop-blur-md transition-all duration-300 hover:shadow-lg hover:border-white/20",
+                "relative rounded-xl border border-white/5 bg-card/30 text-card-foreground shadow-sm overflow-hidden backdrop-blur-xl transition-all duration-500 hover:shadow-2xl hover:bg-card/40 hover:border-white/10 group",
                 className
             )}
             {...props}
         >
-            <div
-                className="pointer-events-none absolute -inset-px opacity-0 transition duration-300"
-                style={{
-                    opacity,
-                    background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, ${spotlightColor}, transparent 40%)`,
-                }}
-            />
-            <div className="relative h-full">{children}</div>
+            {/* Subtle Noise Texture */}
+            <div className="absolute inset-0 bg-noise opacity-[0.03] pointer-events-none mix-blend-overlay" />
+
+            {/* Top Highlight (Static) */}
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50" />
+
+            {/* Gradient Sheen (Hover Only - Subtle) */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/0 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+
+            <div className="relative h-full z-10">{children}</div>
         </div>
     );
 };
