@@ -31,17 +31,43 @@ const DashboardLayout = ({ children, headerTitle, headerDescription, actionSlot 
                     </div>
                 </div>
 
-                {/* Desktop Header (Optional/Contextual) */}
+                {/* Desktop HUD Header */}
                 {(headerTitle || headerDescription || actionSlot) && (
-                    <div className="hidden lg:block sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-white/5">
-                        <div className="px-8 py-6 flex items-start justify-between">
-                            <div>
-                                {headerTitle && <h1 className="text-3xl font-heading font-bold tracking-tight text-foreground">{headerTitle}</h1>}
-                                {headerDescription && <p className="text-muted-foreground mt-1 text-lg">{headerDescription}</p>}
+                    <div className="hidden lg:flex sticky top-6 z-30 px-8 pointer-events-none">
+                        <div className="flex-1 max-w-7xl mx-auto flex items-center justify-between pointer-events-auto">
+
+                            {/* HUD Module: Primary Information */}
+                            <div className="relative group">
+                                <div className="absolute inset-x-0 -bottom-2 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="flex flex-col">
+                                    {headerTitle && (
+                                        <h1 className="text-4xl font-heading font-black tracking-tighter text-foreground drop-shadow-sm leading-none">
+                                            {headerTitle}
+                                        </h1>
+                                    )}
+                                    {headerDescription && (
+                                        <div className="flex items-center gap-2 mt-2">
+                                            <div className="w-1 h-1 rounded-full bg-primary/40" />
+                                            <p className="text-muted-foreground/60 text-xs font-mono uppercase tracking-[0.2em]">{headerDescription}</p>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
+
+                            {/* HUD Module: Actions & System Status */}
                             {actionSlot && (
-                                <div className="flex items-center gap-3">
-                                    {actionSlot}
+                                <div className="flex items-center gap-2 bg-zinc-900/40 backdrop-blur-2xl border border-white/5 p-1.5 rounded-full shadow-2xl relative overflow-hidden group/hud">
+                                    {/* HUD Edge highlight */}
+                                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50" />
+
+                                    <div className="flex items-center gap-2 px-2">
+                                        <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-full border border-white/5">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-500/80">System Live</span>
+                                        </div>
+                                        <div className="w-px h-4 bg-white/10 mx-1" />
+                                        {actionSlot}
+                                    </div>
                                 </div>
                             )}
                         </div>

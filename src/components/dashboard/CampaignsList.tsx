@@ -151,82 +151,110 @@ const CampaignsList = ({ userId }: CampaignsListProps) => {
         </Button>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 gap-8">
         {campaigns.map((campaign, i) => (
           <motion.div
             key={campaign.id}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: i * 0.05 }}
+            transition={{ duration: 0.8, delay: i * 0.1, ease: [0.21, 0.45, 0.32, 0.9] }}
+            whileHover={{ y: -8, scale: 1.01 }}
+            className="flex h-full"
           >
-            <SpotlightCard className="group h-full flex flex-col relative overflow-hidden p-8 hover:bg-card/50 transition-colors">
+            <SpotlightCard className="group flex-1 flex flex-col relative overflow-hidden transition-all duration-500">
 
-              {/* Top Row: Date & ID (Minimal) */}
-              <div className="flex items-center justify-between mb-6">
-                <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">
-                  {format(new Date(campaign.created_at), "MMM d, yyyy")}
-                </span>
-                {/* Only show loader if processing, otherwise clean */}
-                {campaign.status === 'analyzing' && (
-                  <div className="flex items-center gap-2 text-blue-400 text-xs font-medium bg-blue-500/10 px-2 py-1 rounded-full">
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                    Processing
+              {/* Stage 3: Prismatic Accent (Very Thin) */}
+              <div className={`absolute top-0 left-0 right-0 h-[2px] opacity-40 group-hover:opacity-100 transition-opacity duration-700 ${campaign.status === 'completed' ? 'bg-gradient-to-r from-emerald-500 to-teal-500' :
+                campaign.status === 'analyzing' ? 'bg-gradient-to-r from-blue-500 to-indigo-500' :
+                  'bg-gradient-to-r from-zinc-500 to-slate-500'
+                }`} />
+
+              <div className="p-8 flex-1 flex flex-col">
+
+                {/* Asymmetric Header */}
+                <div className="flex items-start justify-between mb-8">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground/60 leading-none">
+                      Protocol Initialized
+                    </span>
+                    <span className="text-xs font-mono text-muted-foreground/40">
+                      {format(new Date(campaign.created_at), "yyyy.MM.dd")}
+                    </span>
                   </div>
-                )}
-              </div>
 
-              {/* Main Content: Title */}
-              <div className="flex-1 mb-6">
-                <h3 className="font-heading font-bold text-2xl mb-3 text-foreground group-hover:text-primary transition-colors leading-tight">
-                  {campaign.name}
-                </h3>
-
-                {/* URL - Subtle */}
-                <div className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-fit">
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span className="truncate max-w-[250px]">{campaign.url}</span>
-                </div>
-              </div>
-
-              {/* Footer: Actions (Floating, Clean) */}
-              <div className="mt-auto flex items-center justify-between pt-6 border-t border-white/5">
-                <div className="text-xs text-muted-foreground font-mono opacity-50">
-                  #{campaign.id.slice(0, 6)}
+                  <JewelIcon
+                    icon={campaign.status === 'analyzing' ? Loader2 : Zap}
+                    color={campaign.status === 'completed' ? 'green' : campaign.status === 'analyzing' ? 'blue' : 'primary'}
+                    size="sm"
+                    className={campaign.status === 'analyzing' ? 'animate-spin' : ''}
+                  />
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <button
-                        className="p-2.5 rounded-xl hover:bg-red-500/10 text-muted-foreground hover:text-red-400 transition-all duration-300"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Campaign?</AlertDialogTitle>
-                        <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(campaign.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-
-                  <Button
-                    className="bg-white/5 hover:bg-white/10 text-foreground border border-white/10 hover:border-white/20 rounded-xl px-5"
-                    onClick={() => navigate(`/campaign/${campaign.id}`)}
-                    disabled={campaign.status !== "completed"}
+                {/* Hero Title (Editorial) */}
+                <div className="mb-8">
+                  <motion.h3
+                    className="font-heading font-black text-3xl tracking-tighter text-foreground group-hover:text-primary transition-colors duration-500 leading-[0.9]"
+                    whileHover={{ x: 4 }}
                   >
-                    <span>Details</span>
-                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Button>
+                    {campaign.name}
+                  </motion.h3>
                 </div>
-              </div>
 
+                {/* Technical Insets (Asymmetric) */}
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                  <div className="bg-white/[0.02] border border-white/5 rounded-lg p-3">
+                    <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 mb-1">Target URL</div>
+                    <div className="text-[11px] font-mono text-primary/70 truncate">{campaign.url.replace('https://', '')}</div>
+                  </div>
+                  <div className="bg-white/[0.02] border border-white/5 rounded-lg p-3">
+                    <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 mb-1">System ID</div>
+                    <div className="text-[11px] font-mono text-muted-foreground/60 truncate">{campaign.id.split('-')[0].toUpperCase()}</div>
+                  </div>
+                </div>
+
+                {/* Minimalist Action Bar */}
+                <div className="mt-auto pt-6 flex items-center justify-between border-t border-white/5">
+                  <div className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary transition-colors shadow-[0_0_8px_rgba(124,58,237,0.3)]" />
+                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground/40 font-bold group-hover:text-muted-foreground/60 transition-colors">
+                      Online
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button
+                          className="p-2 rounded-lg hover:bg-red-500/10 text-muted-foreground/40 hover:text-red-400 transition-all"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="glass-card border-white/10">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="text-2xl font-heading font-bold">Purge System Data?</AlertDialogTitle>
+                          <AlertDialogDescription className="text-muted-foreground">This operation is destructive and cannot be rollbacked.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="bg-white/5 border-white/10">Abort</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(campaign.id)} className="bg-red-500 hover:bg-red-600">Execute Purge</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+
+                    <Button
+                      className="bg-primary/10 hover:bg-primary text-primary hover:text-white border border-primary/20 hover:border-primary px-6 rounded-full transition-all duration-500 group/btn"
+                      onClick={() => navigate(`/campaign/${campaign.id}`)}
+                      disabled={campaign.status !== "completed"}
+                    >
+                      <span className="text-xs font-bold uppercase tracking-widest">Interface</span>
+                      <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                    </Button>
+                  </div>
+                </div>
+
+              </div>
             </SpotlightCard>
           </motion.div>
         ))}
