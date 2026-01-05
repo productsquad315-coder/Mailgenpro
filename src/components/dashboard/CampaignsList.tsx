@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
+import { SpotlightCard } from "@/components/ui/SpotlightCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Eye, Trash2, ExternalLink, Loader2, RefreshCcw } from "lucide-react";
+import { Eye, Trash2, ExternalLink, Loader2, RefreshCcw, Plus, Zap } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { JewelIcon } from "@/components/ui/JewelIcon";
 
 interface CampaignsListProps {
   userId: string;
@@ -49,7 +50,6 @@ const CampaignsList = ({ userId }: CampaignsListProps) => {
 
     fetchCampaigns();
 
-    // Set up realtime subscription
     const channel = supabase
       .channel("campaigns_changes")
       .on(
@@ -89,7 +89,6 @@ const CampaignsList = ({ userId }: CampaignsListProps) => {
         return next;
       });
     } else {
-      // Optimistically remove from UI
       setCampaigns(prev => prev.filter(c => c.id !== id));
       toast.success("Campaign deleted");
       setDeletingIds(prev => {
@@ -102,15 +101,16 @@ const CampaignsList = ({ userId }: CampaignsListProps) => {
 
   if (loading) {
     return (
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[1, 2, 3].map((i) => (
-          <Card key={i} className="glass-card p-6">
-            <div className="animate-pulse space-y-3">
-              <div className="h-4 bg-muted rounded w-3/4" />
-              <div className="h-3 bg-muted rounded w-1/2" />
-              <div className="h-20 bg-muted rounded" />
+      <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6">
+        {[1, 2, 3, 4].map((i) => (
+          <SpotlightCard key={i} className="p-8 h-64 flex flex-col justify-between">
+            <div className="space-y-4 animate-pulse">
+              <div className="h-4 bg-white/5 rounded w-16" />
+              <div className="h-8 bg-white/5 rounded w-3/4" />
+              <div className="h-4 bg-white/5 rounded w-1/2" />
             </div>
-          </Card>
+            <div className="h-10 bg-white/5 rounded w-full animate-pulse" />
+          </SpotlightCard>
         ))}
       </div>
     );
@@ -118,58 +118,51 @@ const CampaignsList = ({ userId }: CampaignsListProps) => {
 
   if (campaigns.length === 0) {
     return (
-      <Card className="glass-card p-12 text-center">
-        <div className="max-w-md mx-auto">
-          <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <ExternalLink className="w-7 h-7 text-primary" />
-          </div>
-          <h3 className="text-xl font-semibold mb-2">Nothing here yet</h3>
-          <p className="text-muted-foreground mb-6">
-            Create your first campaign to get started
-          </p>
-          <Button onClick={() => navigate("/create-campaign")} className="btn-premium">
-            Create campaign
-          </Button>
+      <SpotlightCard className="p-16 text-center flex flex-col items-center justify-center min-h-[400px]">
+        <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 animate-float">
+          <Zap className="w-10 h-10 text-primary" />
         </div>
-      </Card>
+        <h3 className="text-3xl font-heading font-bold mb-2">Start your engine</h3>
+        <p className="text-muted-foreground mb-8 text-lg max-w-lg mx-auto">
+          You haven't generated any campaigns yet. Launch your first one to see the power of MailGenPro.
+        </p>
+        <Button onClick={() => navigate("/create-campaign")} className="btn-premium px-8 py-6 text-lg rounded-xl">
+          <Plus className="w-5 h-5 mr-2" />
+          Create First Campaign
+        </Button>
+      </SpotlightCard>
     );
   }
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "completed":
-        return "bg-green-500/20 text-green-400";
-      case "pending":
-        return "bg-yellow-500/20 text-yellow-400";
-      case "analyzing":
-        return "bg-blue-500/20 text-blue-400";
-      default:
-        return "bg-muted text-muted-foreground";
+      case "completed": return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+      case "pending": return "bg-amber-500/10 text-amber-400 border-amber-500/20";
+      case "analyzing": return "bg-blue-500/10 text-blue-400 border-blue-500/20";
+      default: return "bg-zinc-500/10 text-zinc-400 border-zinc-500/20";
     }
   };
 
   return (
     <div>
-      {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Campaigns</h2>
-          <p className="text-muted-foreground mt-1">
-            {campaigns.length} {campaigns.length === 1 ? 'campaign' : 'campaigns'} created
+          <h2 className="text-3xl font-heading font-bold tracking-tight">Campaigns</h2>
+          <p className="text-muted-foreground mt-1 text-lg">
+            Manage your high-performance email sequences.
           </p>
         </div>
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
           onClick={() => window.location.reload()}
-          className="gap-2"
+          className="gap-2 border-white/10 hover:bg-white/5"
         >
           <RefreshCcw className="w-4 h-4" />
-          <span className="hidden sm:inline">Refresh</span>
+          <span>Refresh</span>
         </Button>
       </div>
 
-      {/* Campaign Grid - Bigger cards, 2 columns max */}
       <div className="grid md:grid-cols-2 gap-6">
         {campaigns.map((campaign, i) => (
           <motion.div
@@ -178,100 +171,59 @@ const CampaignsList = ({ userId }: CampaignsListProps) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: i * 0.05 }}
           >
-            <Card className="group relative overflow-hidden border-2 border-border/50 hover:border-primary/50 transition-all duration-300 h-full flex flex-col">
-              {/* Status Indicator Bar */}
-              <div className={`absolute top-0 left-0 right-0 h-1 ${campaign.status === 'completed' ? 'bg-green-500' :
-                campaign.status === 'analyzing' ? 'bg-blue-500' :
-                  campaign.status === 'pending' ? 'bg-yellow-500' :
-                    'bg-muted'
+            <SpotlightCard className="group h-full flex flex-col relative overflow-hidden">
+              <div className={`absolute top-0 left-0 w-1 h-full opacity-60 transition-colors duration-300 ${campaign.status === 'completed' ? 'bg-emerald-500' :
+                  campaign.status === 'analyzing' ? 'bg-blue-500' :
+                    campaign.status === 'pending' ? 'bg-amber-500' : 'bg-zinc-500'
                 }`} />
 
               <div className="p-8 flex-1 flex flex-col">
-                {/* Header */}
                 <div className="flex items-start justify-between mb-6">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-2xl mb-3 truncate group-hover:text-primary transition-colors">
-                      {campaign.name}
-                    </h3>
-                    <Badge
-                      variant="secondary"
-                      className={`${getStatusColor(campaign.status)} font-medium text-sm px-3 py-1`}
-                    >
-                      {campaign.status === 'analyzing' && (
-                        <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-                      )}
-                      {campaign.status}
-                    </Badge>
-                  </div>
+                  <Badge variant="outline" className={`${getStatusColor(campaign.status)} backdrop-blur-md px-3 py-1 text-xs uppercase tracking-widest`}>
+                    {campaign.status === 'analyzing' && <Loader2 className="w-3 h-3 mr-2 animate-spin" />}
+                    {campaign.status}
+                  </Badge>
+                  <span className="text-xs font-mono text-muted-foreground/60">{format(new Date(campaign.created_at), "MMM d")}</span>
                 </div>
 
-                {/* URL */}
-                <div className="mb-6 flex-1">
-                  <div className="flex items-center gap-2 text-base text-muted-foreground group-hover:text-foreground transition-colors">
-                    <ExternalLink className="w-4 h-4 flex-shrink-0" />
-                    <span className="truncate font-medium">{campaign.url}</span>
-                  </div>
+                <h3 className="font-heading font-bold text-2xl mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                  {campaign.name}
+                </h3>
+
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
+                  <ExternalLink className="w-3 h-3 text-primary/50" />
+                  <span className="truncate max-w-[200px]">{campaign.url}</span>
                 </div>
 
-                {/* Meta Info */}
-                <div className="flex items-center justify-between text-sm text-muted-foreground mb-6 pb-6 border-b border-border/50">
-                  <span>Created {format(new Date(campaign.created_at), "MMM d, yyyy")}</span>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-3">
+                <div className="mt-auto pt-6 border-t border-white/5 flex gap-3">
                   <Button
-                    variant="default"
-                    size="lg"
-                    className="flex-1 gap-2"
+                    className="flex-1 bg-white/5 hover:bg-primary hover:text-white border border-white/10 hover:border-primary/20 transition-all duration-300"
                     onClick={() => navigate(`/campaign/${campaign.id}`)}
                     disabled={campaign.status !== "completed"}
                   >
-                    <Eye className="w-5 h-5" />
-                    View Campaign
+                    View Details
                   </Button>
 
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <div onClick={(e) => e.stopPropagation()}>
-                        <Button
-                          variant="ghost"
-                          size="lg"
-                          className="hover:bg-destructive/10 hover:text-destructive"
-                          disabled={deletingIds.has(campaign.id)}
-                        >
-                          {deletingIds.has(campaign.id) ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-5 h-5" />
-                          )}
-                        </Button>
-                      </div>
+                      <Button variant="ghost" size="icon" className="hover:bg-red-500/10 hover:text-red-400" onClick={(e) => e.stopPropagation()}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Delete campaign?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will permanently delete "{campaign.name}" and all its emails. This action cannot be undone.
-                        </AlertDialogDescription>
+                        <AlertDialogTitle>Delete Campaign?</AlertDialogTitle>
+                        <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDelete(campaign.id)}
-                          className="bg-destructive hover:bg-destructive/90"
-                        >
-                          Delete
-                        </AlertDialogAction>
+                        <AlertDialogAction onClick={() => handleDelete(campaign.id)} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
                 </div>
               </div>
-
-              {/* Hover Effect Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-            </Card>
+            </SpotlightCard>
           </motion.div>
         ))}
       </div>

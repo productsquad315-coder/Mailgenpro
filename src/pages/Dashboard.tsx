@@ -103,7 +103,7 @@ const Dashboard = () => {
     <div className="min-h-screen flex bg-background">
       <DashboardSidebar />
 
-      <div className="flex-1 lg:ml-64">
+      <div className="flex-1 lg:ml-80">
         {/* Header */}
         <div className="sticky top-0 z-10 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 border-b">
           <div className="px-6 lg:px-8">

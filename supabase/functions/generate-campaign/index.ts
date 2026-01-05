@@ -143,70 +143,149 @@ serve(async (req) => {
 
     // Fetch URL content with Multi-Level Strategy
     let pageContent = "";
+    let cleanBody = "";
+
     try {
-      console.log("Scraping URL (Level 1 - Direct):", url);
+      console.log(`[SCRAPER] Level 1: Fetching ${url}`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000); // Increased to 12s
+
       const urlResponse = await fetch(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
           'Accept-Language': 'en-US,en;q=0.9',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+          'Referer': 'https://www.google.com/'
         },
         redirect: 'follow',
-        signal: AbortSignal.timeout(10000) // 10s for direct fetch
-      });
+        signal: controller.signal
+      }).finally(() => clearTimeout(timeoutId));
 
       if (urlResponse.ok) {
-        const html = await urlResponse.text();
-        pageContent = html
+        let html = await urlResponse.text();
+
+        // --- SHOPIFY SPECIFIC EXTRACTION (JSON-LD) ---
+        const ldJsonMatches = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/gi);
+        let structuredData = "";
+
+        if (ldJsonMatches) {
+          ldJsonMatches.forEach(match => {
+            try {
+              const jsonContent = match.replace(/<\/?script[^>]*>/gi, "").trim();
+              const data = JSON.parse(jsonContent);
+              if (data['@type'] === 'Product' || data['@type'] === 'Organization' || data['@context']?.includes('schema.org')) {
+                structuredData += JSON.stringify(data, null, 2) + "\n";
+              }
+            } catch (e) { /* ignore parse errors */ }
+          });
+        }
+
+        // --- META TAG EXTRACTION ---
+        const metaDescMatch = html.match(/<meta\s+name=["']description["']\s+content=["'](.*?)["']/i);
+        const ogDescMatch = html.match(/<meta\s+property=["']og:description["']\s+content=["'](.*?)["']/i);
+        const titleMatch = html.match(/<title>(.*?)<\/title>/i);
+
+        const metaContext = `
+        Title: ${titleMatch ? titleMatch[1] : ''}
+        Description: ${metaDescMatch ? metaDescMatch[1] : (ogDescMatch ? ogDescMatch[1] : '')}
+        `;
+
+        // Clean HTML Body
+        cleanBody = html
           .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
           .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
           .replace(/<[^>]+>/g, ' ')
           .replace(/\s+/g, ' ')
           .trim();
 
-        console.log("Direct fetch content length:", pageContent.length);
+        // Combine for maximum context
+        pageContent = `
+=== METADATA ===
+${metaContext}
+
+=== STRUCTURED DATA (JSON-LD) ===
+${structuredData}
+
+=== PAGE CONTENT ===
+${cleanBody.substring(0, 15000)}
+        `;
+
+        console.log(`[SCRAPER] Level 1 success. JSON-LD: ${!!structuredData}, Body length: ${cleanBody.length}`);
+      } else {
+        console.warn(`[SCRAPER] Level 1 failed with status: ${urlResponse.status}`);
       }
 
-      // Level 2: Fallback to Jina Reader if direct fetch failed or content is too thin
-      if (!pageContent || pageContent.length < 300) {
-        console.log("Direct fetch failed or content thin, attempting Level 2 (Jina Reader)...");
+      // Level 2: Fallback to Jina Reader if body content is thin (< 300 chars)
+      const bodyIsEmpty = !pageContent || pageContent.includes("=== PAGE CONTENT ===\n\n") || cleanBody.length < 300;
+
+      if (bodyIsEmpty) {
+        console.log("[SCRAPER] Level 2: Triggering Jina Reader...");
         const jinaUrl = `https://r.jina.ai/${url}`;
+        const jinaController = new AbortController();
+        const jinaTimeoutId = setTimeout(() => jinaController.abort(), 20000); // 20s for Jina
+
         const jinaResponse = await fetch(jinaUrl, {
           headers: {
             'Accept': 'application/json',
             'X-Return-Format': 'markdown'
           },
-          signal: AbortSignal.timeout(15000) // 15s for Jina
-        });
+          signal: jinaController.signal
+        }).finally(() => clearTimeout(jinaTimeoutId));
 
         if (jinaResponse.ok) {
-          const jinaData = await jinaResponse.text();
-          // Jina returns a clean markdown version
-          pageContent = jinaData;
-          console.log("Jina fetch success, content length:", pageContent.length);
+          pageContent = await jinaResponse.text();
+          console.log(`[SCRAPER] Level 2 (Jina) success. Length: ${pageContent.length}`);
+        } else {
+          console.error(`[SCRAPER] Level 2 (Jina) failed with status: ${jinaResponse.status}`);
         }
       }
 
+      // Final Fail State Check - SOFT FAIL
       if (!pageContent || pageContent.length < 100) {
-        throw new Error("Unable to extract sufficient content from the website.");
+        console.error("[SCRAPER] CRITICAL: Both levels failed to extract content.");
+        // If we have brand guidelines, we can still try to proceed.
+        if (brandGuidelines && brandGuidelines.length > 50) {
+          pageContent = `Note: Website scraping failed. Using only Brand Guidelines for context.`;
+        } else {
+          // If no guidelines AND no website, then we must error
+          return new Response(
+            JSON.stringify({
+              error: "Unable to read website",
+              details: "We couldn't extract content from your URL. Please manually paste your 'Brand Guidelines' or 'About Us' text in the Advanced Options section."
+            }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
       }
     } catch (e) {
-      console.error("Scraping Strategy Error:", e);
-      return new Response(
-        JSON.stringify({
-          error: "Website access restricted",
-          details: "This website is protected or JavaScript-heavy. Please try another URL or enter details manually in Brand Guidelines."
-        }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      console.error("[SCRAPER] Unexpected Error:", e);
+      // Soft fail: if we have guidelines, keep going, else return 400
+      if (!brandGuidelines || brandGuidelines.length < 50) {
+        return new Response(
+          JSON.stringify({
+            error: "Website access restricted",
+            details: "Could not read website. Please manually paste your 'Brand Guidelines' or 'About Us' text in the text box."
+          }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      pageContent = `Note: Website scraping crashed with error: ${(e as any).message}. Using Brand Guidelines instead.`;
     }
 
     // Generate emails
-    const { data: campaignDetails } = await serviceClient
+    console.log("[GENERATOR] Fetching campaign details...");
+    const { data: campaignDetails, error: fetchError } = await serviceClient
       .from("campaigns")
-      .select("name, drip_duration, words_per_email, include_cta, cta_link, analyzed_data")
+      .select("name, drip_duration, words_per_email, include_cta, cta_link, analyzed_data, sequence_type")
       .eq("id", campaignId)
       .single();
+
+    if (fetchError) {
+      console.error("[GENERATOR] Campaign detail fetch error:", fetchError);
+      throw new Error("Failed to fetch campaign details");
+    }
 
     let numEmails = 4;
     const wordsPerEmail = campaignDetails?.words_per_email || 250;
@@ -425,23 +504,85 @@ serve(async (req) => {
     };
 
     // --- NORMALIZATION LAYER ---
-    // Map frontend keys (from sequenceTypes.ts) to backend keys
     const frontendToBackendMap: Record<string, string> = {
       "re-engagement": "win-back",
       "vip-loyalty": "vip",
       "welcome-onboarding": "welcome",
       "expansion-upgrade": "upsell",
       "activation": "customer-success"
-      // Others map 1:1 or defaults
     };
 
     let campaignSequenceType = campaignDetails?.sequence_type || "welcome";
-    // Normalize type
     if (frontendToBackendMap[campaignSequenceType]) {
       campaignSequenceType = frontendToBackendMap[campaignSequenceType];
     }
 
     const selectedStrategy = sequenceStrategyMap[campaignSequenceType] || sequenceStrategyMap["welcome"];
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) throw new Error("AI service not configured.");
+
+    // Phase 1: The Brain (Strategic Reasoning with o1-mini)
+    let blueprint = (campaignDetails?.analyzed_data as any)?.blueprint;
+
+    if (!blueprint) {
+      console.log(`[BRAIN] Phase 1: Performing Deep Strategic Analysis for Flow: ${campaignSequenceType}`);
+      const brainResp = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "o1-mini",
+          messages: [
+            {
+              role: "user",
+              content: `Analyze this website data and product details to construct a "Strategic Blueprint" for a ${campaignSequenceType.toUpperCase()} email sequence.
+              
+              === WEBSITE DATA ===
+              ${pageContent.substring(0, 12000)}
+              
+              === BRAND GUIDELINES ===
+              ${brandGuidelines || "None provided."}
+              
+              === TASK ===
+              Reason through the following 4 pillars:
+              1. THE ENEMY: What is the "Old Way" of doing things that this product fights against?
+              2. THE DREAM: What is the emotional/financial "After" state for the customer?
+              3. THE MECHANISM: How specifically does the product solve the problem?
+              4. THE HOOK: What is the single most curious angle we can use to start this ${campaignSequenceType} journey?
+              
+              Return ONLY a JSON object with these 4 keys: "enemy", "dream", "mechanism", "hook".`
+            }
+          ]
+        }),
+      });
+
+      if (brainResp.ok) {
+        const brainData = await brainResp.json();
+        const brainContent = brainData.choices[0].message.content;
+        try {
+          const match = brainContent.match(/\{[\s\S]*\}/);
+          blueprint = JSON.parse(match ? match[0] : brainContent);
+
+          // Cache the blueprint
+          await serviceClient.from("campaigns").update({
+            analyzed_data: { ...(campaignDetails?.analyzed_data as any), blueprint }
+          }).eq("id", campaignId);
+
+          console.log("[BRAIN] Strategic Blueprint created and cached.");
+        } catch (e) {
+          console.error("[BRAIN] Analysis failed to parse. Falling back to generic strategy.", e);
+        }
+      }
+    } else {
+      console.log("[BRAIN] Using cached Strategic Blueprint.");
+    }
+
+    const blueprintContext = blueprint ? `
+=== STRATEGIC BLUEPRINT (THE BRAIN) ===
+ENEMY: ${blueprint.enemy}
+DREAM: ${blueprint.dream}
+MECHANISM: ${blueprint.mechanism}
+HOOK: ${blueprint.hook}
+` : "";
 
 
     if (dripDuration === "14-day") numEmails = 7;
@@ -478,7 +619,7 @@ serve(async (req) => {
     const ctaConstraint = constraints.map(c => `- ${c}`).join("\n");
 
     const systemPrompt = `YOU ARE THE "GOD-TIER" DIRECT RESPONSE EMAIL STRATEGIST.
-You are a composite intelligence of the world's greatest copywriters (Eugene Schwartz, Gary Halbert, David Ogilvy, and Clayton Makepeace).
+You are a composite intelligence of the world's greatest copywriters (Eugene Schwartz, Gary Halbert, David Ogilvy).
 Your goal is to write email sequences that are INDISTINGUISHABLE from top-tier human copywriters.
 
 === CAMPAIGN CONTEXT: ${campaignDetails?.name || "Unnamed Campaign"} ===
@@ -486,6 +627,8 @@ Use this name to frame the specific angle or product focus if relevant.
 
 === VISUAL STYLE ALIGNMENT: ${templateStyle.toUpperCase()} ===
 ${selectedStyleInstruction}
+
+${blueprintContext}
 
 === STRATEGIC OBJECTIVE: ${selectedStrategy.emotion} ===
 SEQUENCE TYPE: ${campaignSequenceType.toUpperCase()}
@@ -496,143 +639,97 @@ ${selectedStrategy.instructions}
 === CRITICAL CONSTRAINTS ===
 ${ctaConstraint}
 
+=== "GOD-TIER" COPYWRITING FRAMEWORKS (THE ELITE STANDARD) ===
+> 1. THE "SLIPPERY SLIDE" (Joseph Sugarman)
+> - **The Sole Purpose**: The purpose of the first sentence is to get them to read the second sentence. The second to read the third. Momentum is everything.
+> - **Momentum Rule**: Start mid-conversation. No "In today's fast-paced world". No "We are proud to announce". Start with a "greased" sentence.
+> - **Rhythm & Cadence**: Vary sentence lengths radically. (Short. Short. Then a long, flowing one that carries the emotional weight.)
+
+> 2. MARKET AWARENESS (Eugene Schwartz)
+> - **The Frame**: Identify if the reader is "Problem Aware" (ouch, that hurts) or "Solution Aware" (how does yours work?).
+> - **The Unique Mechanism**: Don't sell "features". Sell the *Mechanism*—the specific reason WHY this works when everything else failed. Describe the "how" in simple, vivid verbs.
+
+> 3. THE "ONE-TO-ONE" PROTOCOL (Gary Halbert)
+> - **The Friend Test**: You are a friend writing a letter to another friend. If it sounds like "Marketing", delete it.
+> - **Specificity > Generality**: Never say "save time". Say "save 17 minutes every Monday".
+
+=== HUMAN WRITING SOPs: THE "IRONCLAD" STANDARD (NUCLEAR GRADE) ===
+> OBJECTIVE: To create email content that creates **Intellectual Curiosity**, not "Marketing Hype".
+> PASS/FAIL: If the recipient knows it's a mass email within 0.5 seconds, the email is TRASH.
+
+1. THE "KILL SWITCH" LIST (INSTANT FAIL) - NEVER USE THESE:
+   - ❌ AI-isms: "Embark", "Tapestry", "Delve", "Harness", "Robust", "Revolutionize", "Navigate", "Synergy", "Empower", "Comprehensive", "Pioneering", "Innovative", "Unlock", "Seamlessly", "Cutting-edge", "Game-changer".
+   - ❌ "I hope this email finds you well"
+   - ❌ "I wanted to reach out"
+   - ❌ "Allow me to introduce myself"
+   - ❌ "Apologies for the intrusion"
+
+2. THE "5TH GRADE" VOCABULARY BASELINE (BAR-TALK ONLY)
+   - Banish all corporate jargon and "fancy" words.
+   - Use simple, grounded words. Replace "Utilize" with "Use". Replace "Facilitate" with "Help".
+   - If a 10-year-old wouldn't use it, DON'T USE IT.
+
+3. THE "ADJECTIVE PURGE"
+   - Banish 90% of adjectives. Adjectives are where lies hide.
+   - BAD: "Our comprehensive, powerful dashboard..."
+   - GOOD: "Our dashboard..."
+
+4. THE "BAR TEST" (TONE CHECK)
+   - Read the email out loud. If you wouldn't say it to a friend at a bar, REWRITE IT.
+   - Peer-to-Peer Tone: You are a consultant, not a salesperson.
+
+5. STRUCTURAL MIMICRY: THE "BUSY HUMAN" PROTOCOL
+   - No paragraph > 2 lines on mobile.
+   - Use sentence fragments. (e.g., "Fast. Reliable. Simple.")
+   - "Liquid Syntax": Never start two consecutive sentences with "We" or "I".
+
+=== CONTENT SAFETY GUARDRAILS: THE "PARANOID" WRITER PROTOCOL ===
+> SCOPE: STRICTLY CONTENT-BASED SPAM AVOIDANCE.
+> RULE: We write "Letters", not "Flyers".
+
+1. TECHNICAL "HYGIENE"
+   - 100% PLAIN TEXT. No <div>, <table>, or <img> tags.
+   - Exception: Minimal <br> and <p> only.
+
+2. THE "ONE LINK" LAW
+   - Cold Layer (Email 1-2): ZERO LINKS (unless explicitly requested).
+   - Warm Layer (Email 3+): Max 1 link.
+   - NEVER use "Click Here". Use raw URLs (mailgenpro.com) or "Reply 'link'".
+
+3. THE "SPAM TRAP" DEFENSE (BANNED WORDS)
+   - $$$ / Cash / Bonus / Discount / Free / Urgent / Act Now / Limited Time / Guarantee.
+
+4. THE "GET STARTED" CTA PROTOCOL (MANDATORY)
+   - NEVER use a "Get Started" button or generic link.
+   - OPTION A (Permission Loop): "Reply 'start' and I'll send the guide." (Safest)
+   - OPTION B (Soft Link): "If you want to dive in, you can start here: [Link]"
+
 === THE "SMART EXPANSION" PROTOCOL (LENGTH ENFORCEMENT) ===
-If the user requested a specific length (e.g., 250+ words) and you are falling short, DO NOT add fluff/fillers.
-Instead, use these HIGH-VALUE TACTICS to expand:
-1. "The Micro-Story": Insert a 3-sentence story about a customer before they found the solution.
-2. "The Deeper Why": Explain the *mechanism* in more detail. Don't just say "it works"; explain the biology/physics/logic behind it.
-3. "The Cost of Inaction": Add a paragraph about what happens if they *don't* buy (the negative future).
-4. "The Logic Stack": Use bullet points to break down complex benefits into simple, readable chunks.
+If you need length, DO NOT FLUFF. Use:
+1. "The Micro-Story": A 3-sentence case study.
+2. "The Deeper Why": Explain the MECHANISM (Why it works).
+3. "The Cost of Inaction": What happens if they don't buy?
 
-=== THE "GOD-MODE" STRATEGY CORE ===
-
-1. THE "NEW OPPORTUNITY" PRINCIPLE
-   - Never sell "improvement." People don't want to fix things; they want a NEW vehicle to get them to their dream state.
-   - Position this product as a "New Opportunity" that makes the old way irrelevant.
-
-2. EUGENE SCHWARTZ'S AWARENESS MAPPING
-   - You must detect the lead's awareness level.
-   - If they are "Unaware," start with a story or a hidden secret.
-   - If they are "Problem Aware," start with the pain.
-   - If they are "Solution Aware," start with the unique mechanism.
-
-3. THE "SLIPPERY SLOPE" ARCHITECTURE
-   - The Goal of the Subject Line: Get the email opened.
-   - The Goal of Line 1: Get Line 2 read.
-   - The Goal of Line 2: Get Line 3 read.
-   - THE MOMENTUM MUST BE UNSTOPPABLE. Use "Bucket Brigades" (e.g., "Here's the deal:", "Wait—", "Let me explain:", "But simply put:").
-
-4. THE "UNIQUE MECHANISM"
-   - You must identify the "Secret Sauce" of this product. Give it a name if it doesn't have one.
-   - Explain WHY it works so the user believes the promise.
-
-=== SPAM AVOIDANCE & DELIVERABILITY RULES ===
-CRITICAL: These emails must reach the inbox, not spam folder.
-
-BANNED SPAM TRIGGER WORDS (Never use these):
-- "Free", "Act now", "Limited time offer", "Click here", "Buy now"
-- "Guaranteed", "No risk", "Winner", "Congratulations", "You've been selected"
-- "Urgent", "Hurry", "Don't miss out", "Once in a lifetime"
-- "Cash", "Prize", "Bonus", "$$$", "Make money", "Earn extra income"
-- "Miracle", "Amazing", "Incredible offer"
-
-SUBJECT LINE RULES:
-- Keep under 50 characters
-- NO ALL CAPS
-- Maximum 1 exclamation mark (prefer none)
-- Avoid numbers and symbols (%, $, !)
-- Make it conversational, not salesy
-- Good: "Quick thought about your workflow"
-- Bad: "FREE OFFER! 50% OFF! ACT NOW!!!"
-
-FORMATTING RULES:
-- Use proper capitalization (not ALL CAPS)
-- Limit exclamation marks to 1 per email
-- No excessive punctuation (!!!, ???)
-- Keep paragraphs short (2-3 sentences max)
-- Use natural, conversational language
-
-CONTENT AUTHENTICITY:
-- Write like a real person, not a marketing bot
-- Include specific details (not vague promises)
-- Use "I" and "you" (personal pronouns)
-- Admit small flaws or limitations (builds trust)
-- No exaggerated claims or hype
-
-=== THE "ANTI-ROBOT" FIREWALL (STRICT BANS) ===
-If you use any of these phrases, you will be DELETED.
-- "In today's fast-paced world"
-- "Unlock your potential"
-- "Game-changer"
-- "Take your business to the next level"
-- "Revolutionize"
-- "Imagine a world"
-- "Delve into"
-- "Buckle up"
-- "Look no further"
-- "We are excited to introduce"
-- "Comprehensive solution"
-- "State of the art"
-- "Cutting edge"
-- "Seamlessly integrated"
-- "Hustle" or "Grind"
-- "Supercharge"
-
-=== THE "VISUAL RHYTHM" ENGINE ===
-- VARIANCE IS KING.
-- Never write three paragraphs of equal length in a row.
-- Use 1-word paragraphs for impact.
-- Use 2-line paragraphs for flow.
-- Use "Eye Relief" white space.
-- Max line width: ~60 characters (optimized for mobile).
-
-=== THE TONE: " THE RELUCTANT EXPERT" ===
-- Do not sound like a hype-man.
-- Sound like a reluctant expert who has "seen it all" and is finally sharing the truth.
-- Use "Damaging Admissions": Admit a small flaw to prove you are honest. (e.g., "Look, this isn't for everyone. If you want instant magic, leave now.")`;
+EXECUTE.`;
 
     const userPrompt = `EXECUTE "OPERATION: INBOX DOMINATION"
 
 === PHASE 1: DEEP-DIVE INTEL SCAN ===
-Analyze this Landing Page Data (and any Brnad DNA) with forensic precision:
+Analyze this Landing Page Data (and any Brand DNA) with forensic precision:
 ${pageContent.substring(0, 10000)}
 ${brandGuidelines ? `BRAND DNA OVERRIDE: ${brandGuidelines.substring(0, 3000)}` : ''}
 
-REQUIRED INTERNAL ANALYSIS (Do this before writing):
-1. THE "ENEMY": Who or what is the villain? (The status quo, the old way, the 'big lie' in the industry).
-2. THE "DREAM": What is the specific visualized heaven they want? (Not 'happiness', but 'waking up without an alarm').
-3. THE "MECHANISM": What is the technical reason this product works?
-4. THE "HOOK": What is the one counter-intuitive fact that grabs attention?
-
 === PHASE 2: SEQUENCE CONSTRUCTION ===
-GENERATE EXACTLY ${numEmails} EMAILS.
+GENERATE EXACTLY ${numEmails} EMAILS based on the Strategic Blueprint and Strategy Arc.
 STRICT ADHERENCE TO CRITICAL CONSTRAINTS REQUIRED.
 
-STRUCTURE THE EMAILS AS FOLLOWS:
+=== PHASE 2: SEQUENCE CONSTRUCTION ===
+GENERATE EXACTLY ${numEmails} EMAILS based on the Strategic Blueprint and the specific Strategy Arc below.
+STRICT ADHERENCE TO CRITICAL CONSTRAINTS REQUIRED.
 
-EMAIL 1: THE "PATTERN INTERRUPT" FRAME
-- Goal: Break their trance.
-- Opening: Start mid-conversation or with a shocking statement. NO "Hi [Name]" or "Welcome".
-- Body: Tell a micro-story about the "Enemy." Pivot to the "New Opportunity."
-- CTA: Low friction (Read more, Watch this).
+${selectedStrategy.instructions}
 
-EMAIL 2: THE "LOGIC BRIDGE" FRAME
-- Goal: Intellectual buy-in.
-- Opening: "I was thinking about what I sent yesterday..."
-- Body: Explain the "Unique Mechanism." Prove WHY the old way failed and why this NEW way works mathematically/scientifically.
-- CTA: Check it out.
-
-EMAIL 3: THE "FUTURE PACE" FRAME
-- Goal: Emotional buy-in.
-- Opening: "Imagine this..." (but better).
-- Body: Describe their life AFTER the problem is solved. Use sensory details.
-- CTA: Direct invitation.
-
-EMAIL 4+ (If applicable): THE "URGENCY/LOGIC" STACK
-- Goal: Conversion.
-- Focus: The cost of inaction. The pain of staying the same.
-- Disclaimer: "I won't keep bugging you about this, but..."
-- CTA: Final call.
+(Note: If the strategy instructions only specify fewer emails than the requested ${numEmails}, continue the established arc and psychological frame logically for the remaining emails, following the Strategic Objective and Human Writing SOPs. NEVER break character or the established frame).
 
 === OUTPUT RULES ===
 - RETURN RAW JSON ONLY.
@@ -643,7 +740,7 @@ EMAIL 4+ (If applicable): THE "URGENCY/LOGIC" STACK
 
 EXECUTE.`;
 
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    console.log("[GENERATOR] Phase 2: Production Writing with gpt-4o...");
     const resp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -662,18 +759,16 @@ EXECUTE.`;
 
     if (!resp.ok) {
       const errorText = await resp.text();
-      console.error("OpenAI API error:", errorText);
+      console.error("[GENERATOR] production failed:", errorText);
       throw new Error(`AI Generation failed: ${resp.status}`);
     }
 
     const aiData = await resp.json();
     let contentText = aiData.choices[0].message.content;
 
-    // Robust JSON cleaning for markdown and other artifacts
-    if (contentText.includes("```json")) {
-      contentText = contentText.split("```json")[1].split("```")[0].trim();
-    } else if (contentText.includes("```")) {
-      contentText = contentText.split("```")[1].split("```")[0].trim();
+    const jsonMatch = contentText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      contentText = jsonMatch[0];
     }
 
     let emailsData;
@@ -688,17 +783,24 @@ EXECUTE.`;
       throw new Error("AI response was missing the expected email sequence data.");
     }
 
-    // Save emails
-    for (let i = 0; i < emailsData.emails.length; i++) {
-      const email = emailsData.emails[i];
-      await serviceClient.from("email_sequences").insert({
-        campaign_id: campaignId,
-        sequence_number: i + 1,
-        email_type: email.type,
-        subject: email.subject,
-        content: email.content,
-        html_content: email.html,
-      });
+    // --- ATOMIC SAVE & CHARGE LOGIC ---
+    console.log(`[SAVER] Saving ${emailsData.emails.length} emails to database...`);
+    const emailsBatch = emailsData.emails.map((email: any, i: number) => ({
+      campaign_id: campaignId,
+      sequence_number: i + 1,
+      email_type: email.type || "standard",
+      subject: email.subject,
+      content: email.content,
+      html_content: email.html,
+    }));
+
+    const { error: insertError } = await serviceClient
+      .from("email_sequences")
+      .insert(emailsBatch);
+
+    if (insertError) {
+      console.error("[SAVER] Failed to save emails:", insertError);
+      throw new Error("Failed to save generated emails.");
     }
 
     await serviceClient
@@ -706,16 +808,14 @@ EXECUTE.`;
       .update({ status: "completed" })
       .eq("id", campaignId);
 
-    // Deduct credits using consolidated function
+    // SMARTER CREDITS: Atomic Deduction (Capped at ordered count)
     if (user && campaign.user_id) {
-      console.log(`Deducting ${emailsData.emails.length} credits for user ${user.id}`);
-      for (let i = 0; i < emailsData.emails.length; i++) {
-        const { data: success, error: deductError } = await serviceClient.rpc('deduct_email_credit', { p_user_id: user.id });
-        if (deductError) {
-          console.error(`Failed to deduct credit ${i + 1}:`, deductError);
-        } else {
-          console.log(`Deduction ${i + 1}/${emailsData.emails.length} success:`, success);
-        }
+      const amountToDeduct = Math.min(numEmails, emailsData.emails.length);
+      console.log(`[CREDITS] Deducting capped amount: ${amountToDeduct} credits (Ordered: ${numEmails}, AI Generated: ${emailsData.emails.length})`);
+
+      for (let i = 0; i < amountToDeduct; i++) {
+        const { error: deductError } = await serviceClient.rpc('deduct_email_credit', { p_user_id: user.id });
+        if (deductError) console.error(`[CREDITS] Deduction ${i + 1} failed:`, deductError);
       }
     }
 
@@ -723,9 +823,20 @@ EXECUTE.`;
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
+    const err = error as any;
+    console.error(`[FATAL] Error in generate-campaign:`, err);
+
+    let status = 500;
+    if (err.message?.includes("Insufficient credits")) status = 402;
+    if (err.message?.includes("Unauthorized")) status = 403;
+    if (err.message?.includes("AI Generation failed: 401")) status = 401;
+    if (err.message?.includes("AI Generation failed: 429")) status = 429;
+
+    return new Response(JSON.stringify({
+      error: err.message || "An unexpected error occurred",
+      details: err.details || ""
+    }), {
+      status,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
