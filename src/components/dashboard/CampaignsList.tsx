@@ -152,82 +152,89 @@ const CampaignsList = ({ userId }: CampaignsListProps) => {
         </Button>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-10">
         {campaigns.map((campaign, i) => (
           <motion.div
             key={campaign.id}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: i * 0.05 }}
+            transition={{ duration: 0.5, delay: i * 0.1 }}
           >
-            <SpotlightCard className={cn(
-              "group h-full flex flex-col relative overflow-hidden p-6 hover:translate-y-[-4px] transition-all duration-300",
-              campaign.status === 'completed' ? 'border-l-4 border-l-emerald-500' :
-                campaign.status === 'analyzing' ? 'border-l-4 border-l-blue-500' : 'border-l-4 border-l-zinc-700'
-            )}>
+            <SpotlightCard className="group h-full flex flex-col relative overflow-hidden p-10 hover:translate-y-[-8px] transition-all duration-500">
 
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-                  {format(new Date(campaign.created_at), "MMM d, yyyy")}
-                </span>
-                {campaign.status === 'completed' && (
-                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                    <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-tight">Active</span>
+              <div className="flex items-center justify-between mb-10">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] opacity-40">
+                    Protocol Launch
+                  </span>
+                  <span className="text-xs font-mono text-muted-foreground/60">
+                    {format(new Date(campaign.created_at), "MMM d, yyyy")}
+                  </span>
+                </div>
+
+                {campaign.status === 'completed' ? (
+                  <div className="px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.1)]">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Active System</span>
                   </div>
-                )}
-                {campaign.status === 'analyzing' && (
-                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20">
+                ) : campaign.status === 'analyzing' ? (
+                  <div className="px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center gap-2">
                     <Loader2 className="w-3 h-3 text-blue-500 animate-spin" />
-                    <span className="text-[10px] font-bold text-blue-500 uppercase tracking-tight">Processing</span>
+                    <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Processing Data</span>
+                  </div>
+                ) : (
+                  <div className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-zinc-500" />
+                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Idle</span>
                   </div>
                 )}
               </div>
 
-              <div className="flex-1 mb-6">
-                <h3 className="font-heading font-bold text-xl mb-2 text-foreground group-hover:text-emerald-400 transition-colors line-clamp-2">
+              <div className="flex-1 mb-12">
+                <h3 className="font-heading font-black text-4xl mb-4 text-foreground group-hover:text-primary transition-colors duration-500 tracking-tighter leading-none">
                   {campaign.name}
                 </h3>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <ExternalLink className="w-3 h-3 opacity-50" />
-                  <span className="truncate max-w-[150px]">{campaign.url.replace('https://', '')}</span>
+                <div className="flex items-center gap-3 text-sm text-muted-foreground/60 bg-white/5 w-fit px-4 py-2 rounded-xl border border-white/5">
+                  <ExternalLink className="w-4 h-4 text-primary/50" />
+                  <span className="truncate max-w-[300px] font-medium">{campaign.url.replace('https://', '')}</span>
                 </div>
               </div>
 
-              <div className="mt-auto pt-4 flex items-center justify-between border-t border-white/5">
-                <span className="text-[10px] font-mono text-muted-foreground/40">
-                  ID: {campaign.id.split('-')[0]}
-                </span>
+              <div className="mt-auto pt-8 flex items-center justify-between border-t border-white/5">
+                <div className="text-[10px] font-mono text-muted-foreground/30 flex items-center gap-2">
+                  <div className="w-1 h-1 rounded-full bg-white/20" />
+                  Ref: {campaign.id.split('-')[0].toUpperCase()}
+                </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-4">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <button
-                        className="p-2 rounded-lg hover:bg-red-500/10 text-muted-foreground hover:text-red-400 transition-colors"
+                        className="p-3 rounded-xl hover:bg-red-500/10 text-muted-foreground/30 hover:text-red-400 transition-all duration-300"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-5 h-5" />
                       </button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="glass-card border-white/10">
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Campaign?</AlertDialogTitle>
-                        <AlertDialogDescription>This will permanently remove this campaign.</AlertDialogDescription>
+                        <AlertDialogTitle className="text-2xl font-bold font-heading">Destroy Campaign Data?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-muted-foreground">This operation is permanent and cannot be reversed by the administrator.</AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(campaign.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+                        <AlertDialogCancel className="bg-white/5">Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(campaign.id)} className="bg-red-500 hover:bg-red-600 px-8">Confirm Deletion</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
 
                   <Button
-                    className="h-8 px-4 bg-white/5 hover:bg-white/10 text-foreground border border-white/10 rounded-lg text-xs font-semibold transition-all group/btn"
+                    className="h-12 px-8 bg-zinc-100 hover:bg-white text-zinc-950 font-bold rounded-xl transition-all duration-300 transform group-hover:scale-105"
                     onClick={() => navigate(`/campaign/${campaign.id}`)}
                     disabled={campaign.status !== "completed"}
                   >
-                    <span>View Details</span>
-                    <ArrowRight className="w-3 h-3 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                    <span>Analyze Details</span>
+                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </div>
               </div>
