@@ -2,17 +2,16 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { CreditCard, Check, Zap, Crown, ChevronRight, Receipt, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
 import { Switch } from "@/components/ui/switch";
-import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
-import MobileSidebar from "@/components/dashboard/MobileSidebar";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { SpotlightCard } from "@/components/ui/SpotlightCard";
+import { JewelIcon } from "@/components/ui/JewelIcon";
 import { useUserPlan } from "@/hooks/useUserPlan";
-import { trackPlanUpgrade, trackButtonClick } from "@/lib/analytics";
+import { trackPlanUpgrade } from "@/lib/analytics";
 import CreditPacks from "@/components/billing/CreditPacks";
 import { openLemonSqueezyCheckout } from "@/lib/lemonSqueezy";
 import { LEMON_SQUEEZY_PRICES } from "@/lib/lemonSqueezyPrices";
@@ -46,7 +45,7 @@ const Billing = () => {
       price: 0,
       period: "",
       icon: Zap,
-      color: "from-gray-500 to-gray-600",
+      color: "gray",
       features: [
         "20 credits (one-time)",
         "1 credit = 1 email generated",
@@ -60,7 +59,7 @@ const Billing = () => {
       price: isLifetimeToggle ? 59 : 19,
       period: isLifetimeToggle ? "one-time" : "month",
       icon: CreditCard,
-      color: "from-primary to-accent",
+      color: "blue",
       popular: true,
       showToggle: true,
       lifetimePrice: 59,
@@ -77,7 +76,7 @@ const Billing = () => {
       price: 29,
       period: "month",
       icon: Crown,
-      color: "from-accent to-primary",
+      color: "purple",
       features: [
         "400 credits per month",
         "1 credit = 1 email generated",
@@ -138,8 +137,6 @@ const Billing = () => {
         .maybeSingle();
 
       if ((usageData as any)?.lemonsqueezy_customer_id) {
-        // Lemon Squeezy simplified customer portal
-        // Alternatively, use: https://app.lemonsqueezy.com/my-orders
         window.open(`https://app.lemonsqueezy.com/my-orders`, '_blank');
         toast.info('Manage your subscription in the Lemon Squeezy portal');
       } else {
@@ -152,205 +149,192 @@ const Billing = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
-      </div>
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+        </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <DashboardSidebar />
-
-      <div className="flex-1 flex flex-col">
-        {/* Top Bar */}
-        <div className="sticky top-0 z-40 border-b border-border/40 glass-card">
-          <div className="flex items-center justify-between px-6 py-4">
-            <div className="flex items-center gap-4">
-              <MobileSidebar />
-              <div>
-                <h1 className="text-3xl font-bold tracking-tight">Mailgenpro Plans</h1>
-                <p className="text-sm text-muted-foreground">Manage your subscription and payment methods</p>
+    <DashboardLayout
+      headerTitle="Plans & Billing"
+      headerDescription="Manage your subscription and payment methods"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-6xl mx-auto space-y-8"
+      >
+        {/* Current Plan Card */}
+        <SpotlightCard className="p-8 border-primary/20">
+          <div className="flex flex-col md:flex-row items-start justify-between gap-6">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <h2 className="text-2xl font-heading font-semibold">Current Plan</h2>
+                <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/20">
+                  {getCurrentPlanName()}
+                </Badge>
               </div>
+              <p className="text-muted-foreground max-w-xl">
+                {isTrial && "You're on the free trial. Upgrade to get more credits and unlock premium features."}
+                {isStarter && "You're on the Starter plan. Upgrade to Pro for more credits and advanced features."}
+                {isLifetime && "You have lifetime access to Starter features. Upgrade to Pro for even more."}
+                {isPro && "You're on the Pro plan with full access to all features."}
+              </p>
             </div>
+            <div className="flex gap-3 w-full md:w-auto">
+              {!isTrial && !isLifetime && (
+                <Button variant="outline" onClick={handleManageSubscription} className="flex-1 md:flex-none border-white/10 hover:bg-white/5">
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  Manage Subscription
+                </Button>
+              )}
+              {!isPro && (
+                <Button onClick={() => handleUpgrade(isStarter || isLifetime ? "Pro" : "Starter")} className="flex-1 md:flex-none btn-premium">
+                  <Crown className="w-4 h-4 mr-2" />
+                  Upgrade Now
+                </Button>
+              )}
+            </div>
+          </div>
+
+          <div className="w-full h-px bg-white/5 my-8" />
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="p-5 rounded-xl bg-white/5 border border-white/5">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-1.5 rounded-md bg-purple-500/20 text-purple-400">
+                  <Receipt className="w-4 h-4" />
+                </div>
+                <p className="text-sm font-medium text-muted-foreground">Billing Cycle</p>
+              </div>
+              <p className="text-xl font-heading font-semibold ml-1">
+                {isTrial ? "No Active Plan" : isLifetime ? "Lifetime" : "Monthly"}
+              </p>
+            </div>
+
+            {!isTrial && !isLifetime && (
+              <>
+                <div className="p-5 rounded-xl bg-white/5 border border-white/5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-1.5 rounded-md bg-blue-500/20 text-blue-400">
+                      <Calendar className="w-4 h-4" />
+                    </div>
+                    <p className="text-sm font-medium text-muted-foreground">Renews On</p>
+                  </div>
+                  <p className="text-xl font-heading font-semibold ml-1">
+                    {new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </p>
+                </div>
+
+                <div className="p-5 rounded-xl bg-white/5 border border-white/5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-1.5 rounded-md bg-emerald-500/20 text-emerald-400">
+                      <CreditCard className="w-4 h-4" />
+                    </div>
+                    <p className="text-sm font-medium text-muted-foreground">Payment Method</p>
+                  </div>
+                  <p className="text-xl font-heading font-semibold ml-1">•••• 4242</p>
+                </div>
+              </>
+            )}
+          </div>
+        </SpotlightCard>
+
+        {/* Available Plans */}
+        <div>
+          <h2 className="text-3xl font-heading font-bold mb-8">Available Plans</h2>
+          <div className="grid gap-8 md:grid-cols-3">
+            {plans.map((planItem, index) => {
+              const isCurrentPlan = planItem.name.toLowerCase() === plan;
+              const isPopular = planItem.popular;
+
+              return (
+                <motion.div
+                  key={planItem.name}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <SpotlightCard
+                    className={`p-8 relative h-full flex flex-col ${isPopular ? 'border-primary/50 shadow-2xl shadow-primary/10' : ''}`}
+                    spotlightColor={isPopular ? "rgba(124, 58, 237, 0.2)" : undefined}
+                  >
+                    {isPopular && (
+                      <div className="absolute top-0 right-0 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-[10px] font-bold tracking-widest px-3 py-1.5 rounded-bl-xl uppercase">
+                        Most Popular
+                      </div>
+                    )}
+
+                    <JewelIcon icon={planItem.icon} color={planItem.color as any} size="lg" className="mb-6" />
+
+                    <h3 className="text-2xl font-bold mb-2">{planItem.name}</h3>
+
+                    <div className="mb-8 min-h-[80px]">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-4xl font-bold tracking-tight">
+                          ${planItem.showToggle && isLifetimeToggle && planItem.lifetimePrice ? planItem.lifetimePrice : planItem.price}
+                        </span>
+                        <span className="text-muted-foreground font-medium">
+                          /{planItem.showToggle && isLifetimeToggle ? 'life' : planItem.period || 'forever'}
+                        </span>
+                      </div>
+
+                      {planItem.showToggle && (
+                        <div className="flex items-center gap-3 mt-4 p-1 bg-white/5 rounded-lg w-fit">
+                          <Switch id="lifetime-mode" checked={isLifetimeToggle} onCheckedChange={setIsLifetimeToggle} className="scale-75 data-[state=checked]:bg-primary" />
+                          <label htmlFor="lifetime-mode" className="text-xs font-medium cursor-pointer select-none pr-2">
+                            {isLifetimeToggle ? "Lifetime Access" : "Monthly"}
+                          </label>
+                        </div>
+                      )}
+                    </div>
+
+                    <Button
+                      className={`w-full mb-8 py-6 rounded-xl text-base ${isPopular && !isCurrentPlan ? "btn-premium" : isCurrentPlan ? "border-white/10 hover:bg-white/5" : "bg-white/10 hover:bg-white/20"}`}
+                      variant={isCurrentPlan ? "outline" : "default"}
+                      disabled={isCurrentPlan || planItem.name === "Free Trial"}
+                      onClick={() => {
+                        if (planItem.name === "Free Trial") return;
+                        handleUpgrade(planItem.name);
+                      }}
+                    >
+                      {isCurrentPlan ? "Current Plan" : planItem.name === "Free Trial" ? "Included" : "Upgrade Plan"}
+                      {!isCurrentPlan && planItem.name !== "Free Trial" && <ChevronRight className="w-4 h-4 ml-2" />}
+                    </Button>
+
+                    <div className="space-y-4 flex-1">
+                      {planItem.features.map((feature) => (
+                        <div key={feature} className="flex items-center gap-3">
+                          <div className={`p-1 rounded-full ${isPopular ? "bg-primary/20 text-primary" : "bg-white/10 text-white"}`}>
+                            <Check className="w-3 h-3" />
+                          </div>
+                          <span className="text-sm text-muted-foreground">{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </SpotlightCard>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        {/* Credit Packs Section */}
+        {user && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-6xl mx-auto space-y-8"
+            transition={{ delay: 0.3 }}
+            className="mt-12"
           >
-            {/* Current Plan Card */}
-            <Card className="glass-card p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <h2 className="text-xl font-semibold">Current Plan</h2>
-                    <Badge variant="secondary" className="bg-primary/10 text-primary">
-                      {getCurrentPlanName()}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {isTrial && "You're on the free trial. Upgrade to get more credits and unlock premium features."}
-                    {isStarter && "You're on the Starter plan. Upgrade to Pro for more credits and advanced features."}
-                    {isLifetime && "You have lifetime access to Starter features. Upgrade to Pro for even more."}
-                    {isPro && "You're on the Pro plan with full access to all features."}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  {!isTrial && !isLifetime && (
-                    <Button variant="outline" onClick={handleManageSubscription}>
-                      <CreditCard className="w-4 h-4 mr-2" />
-                      Manage Subscription
-                    </Button>
-                  )}
-                  {!isPro && (
-                    <Button onClick={() => handleUpgrade(isStarter || isLifetime ? "Pro" : "Starter")}>
-                      <Crown className="w-4 h-4 mr-2" />
-                      Upgrade Now
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              <Separator className="my-6" />
-
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="p-4 rounded-lg bg-muted/30">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Receipt className="w-4 h-4 text-muted-foreground" />
-                    <p className="text-sm font-medium">Billing Cycle</p>
-                  </div>
-                  <p className="text-lg font-semibold">
-                    {isTrial ? "No active subscription" : isLifetime ? "Lifetime" : "Monthly"}
-                  </p>
-                </div>
-
-                {!isTrial && !isLifetime && (
-                  <>
-                    <div className="p-4 rounded-lg bg-muted/30">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Calendar className="w-4 h-4 text-muted-foreground" />
-                        <p className="text-sm font-medium">Next Billing Date</p>
-                      </div>
-                      <p className="text-lg font-semibold">
-                        {new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                      </p>
-                    </div>
-
-                    <div className="p-4 rounded-lg bg-muted/30">
-                      <div className="flex items-center gap-2 mb-2">
-                        <CreditCard className="w-4 h-4 text-muted-foreground" />
-                        <p className="text-sm font-medium">Payment Method</p>
-                      </div>
-                      <p className="text-lg font-semibold">On file</p>
-                    </div>
-                  </>
-                )}
-              </div>
-            </Card>
-
-            {/* Available Plans */}
-            <div>
-              <h2 className="text-2xl font-bold mb-6">Available Plans</h2>
-              <div className="grid gap-6 md:grid-cols-3">
-                {plans.map((planItem, index) => {
-                  const Icon = planItem.icon;
-                  const isCurrentPlan = planItem.name.toLowerCase() === plan;
-
-                  return (
-                    <motion.div
-                      key={planItem.name}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                    >
-                      <Card className={`glass-card p-6 relative overflow-hidden ${planItem.popular ? 'border-primary/50 shadow-lg shadow-primary/10' : ''}`}>
-                        {planItem.popular && (
-                          <div className="absolute top-0 right-0 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-medium px-3 py-1 rounded-bl-lg">
-                            POPULAR
-                          </div>
-                        )}
-
-                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${planItem.color} flex items-center justify-center mb-4`}>
-                          <Icon className="w-6 h-6 text-white" />
-                        </div>
-
-                        <h3 className="text-2xl font-bold mb-2">{planItem.name}</h3>
-
-                        <div className="mb-6">
-                          <span className="text-4xl font-bold">
-                            ${planItem.showToggle && isLifetimeToggle && planItem.lifetimePrice ? planItem.lifetimePrice : planItem.price}
-                          </span>
-                          <span className="text-muted-foreground">
-                            /{planItem.showToggle && isLifetimeToggle ? 'one-time' : planItem.period}
-                          </span>
-                        </div>
-
-                        {planItem.showToggle && (
-                          <div className="flex items-center gap-3 p-3 rounded-xl bg-secondary/50 mb-6">
-                            <span className={!isLifetimeToggle ? 'font-medium text-sm' : 'text-muted-foreground text-sm'}>Monthly</span>
-                            <Switch checked={isLifetimeToggle} onCheckedChange={setIsLifetimeToggle} />
-                            <span className={isLifetimeToggle ? 'font-medium text-sm' : 'text-muted-foreground text-sm'}>Lifetime</span>
-                          </div>
-                        )}
-
-                        <Button
-                          className={`w-full mb-6 ${!isCurrentPlan && planItem.name !== "Free Trial" ? "btn-premium" : ""}`}
-                          variant={isCurrentPlan ? "outline" : "default"}
-                          disabled={isCurrentPlan || planItem.name === "Free Trial"}
-                          onClick={() => {
-                            if (planItem.name === "Free Trial") return;
-                            handleUpgrade(planItem.name);
-                          }}
-                        >
-                          {isCurrentPlan ? "Current Plan" : planItem.name === "Free Trial" ? "Current Plan" : "Upgrade"}
-                          {!isCurrentPlan && planItem.name !== "Free Trial" && <ChevronRight className="w-4 h-4 ml-2" />}
-                        </Button>
-
-                        <Separator className="mb-4" />
-
-                        <ul className="space-y-3">
-                          {planItem.features.map((feature) => (
-                            <li key={feature} className="flex items-start gap-2">
-                              <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                              <span className="text-sm">{feature}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </Card>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Billing History */}
-            <Card className="glass-card p-6">
-              <h2 className="text-xl font-semibold mb-4">Billing History</h2>
-              <p className="text-sm text-muted-foreground">
-                Your payment history and invoices will appear here once you upgrade to a paid plan.
-              </p>
-            </Card>
-
-            {/* Credit Packs Section */}
-            {user && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="mt-8"
-              >
-                <CreditPacks userId={user.id} />
-              </motion.div>
-            )}
+            <CreditPacks userId={user.id} />
           </motion.div>
-        </div>
-      </div>
-    </div>
+        )}
+      </motion.div>
+    </DashboardLayout>
   );
 };
 

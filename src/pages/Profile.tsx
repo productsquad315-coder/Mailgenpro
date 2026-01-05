@@ -4,14 +4,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { User, Mail, Calendar, Shield, Trash2, Save } from "lucide-react";
+import { User, Mail, Calendar, Shield, Trash2, Save, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
-import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
-import MobileSidebar from "@/components/dashboard/MobileSidebar";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { SpotlightCard } from "@/components/ui/SpotlightCard";
+import { JewelIcon } from "@/components/ui/JewelIcon";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -70,179 +80,163 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
-      </div>
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+        </div>
+      </DashboardLayout>
     );
   }
 
   const createdAt = user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A';
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <DashboardSidebar />
-      
-      <div className="flex-1 flex flex-col">
-        {/* Top Bar */}
-        <div className="sticky top-0 z-40 border-b border-border/40 glass-card">
-          <div className="flex items-center justify-between px-6 py-4">
-            <div className="flex items-center gap-4">
-              <MobileSidebar />
-              <div>
-                <h1 className="text-2xl font-bold tracking-tight">My Profile</h1>
-                <p className="text-sm text-muted-foreground">Manage your personal information and account settings</p>
+    <DashboardLayout
+      headerTitle="My Profile"
+      headerDescription="Manage your personal information and account settings"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-4xl mx-auto space-y-8"
+      >
+        {/* Profile Information Card */}
+        <SpotlightCard className="p-8 border-primary/20">
+          <div className="flex items-start gap-4 mb-8">
+            <JewelIcon icon={User} size="lg" color="blue" />
+            <div>
+              <h2 className="text-xl font-heading font-semibold">Profile Information</h2>
+              <p className="text-sm text-muted-foreground">Update your personal details</p>
+            </div>
+          </div>
+
+          <div className="space-y-6 max-w-xl">
+            <div className="space-y-2">
+              <Label htmlFor="displayName">Display Name</Label>
+              <Input
+                id="displayName"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="Enter your display name"
+                className="bg-white/5 border-white/10 focus:border-primary/50"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                disabled
+                className="bg-muted/50 border-white/5"
+              />
+              <p className="text-xs text-muted-foreground flex items-center gap-2">
+                <Shield className="w-3 h-3" />
+                Email cannot be changed for security reasons
+              </p>
+            </div>
+
+            <Button onClick={handleSaveProfile} disabled={saving} className="btn-premium">
+              <Save className="w-4 h-4 mr-2" />
+              {saving ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </SpotlightCard>
+
+        {/* Account Information Card */}
+        <SpotlightCard className="p-8 border-primary/20">
+          <div className="flex items-start gap-4 mb-8">
+            <JewelIcon icon={Shield} size="lg" color="purple" />
+            <div>
+              <h2 className="text-xl font-heading font-semibold">Account Status</h2>
+              <p className="text-sm text-muted-foreground">Your account details and verification</p>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500">
+                  <Mail className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">Email Status</p>
+                  <p className="text-sm font-medium text-white">Verified</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
+                  <Calendar className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">Member Since</p>
+                  <p className="text-sm font-medium text-white">{createdAt}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="md:col-span-2 flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
+              <div className="flex items-center gap-3 overflow-hidden">
+                <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500 shrink-0">
+                  <User className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">User ID</p>
+                  <p className="text-sm font-mono text-muted-foreground truncate">{user?.id}</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </SpotlightCard>
 
-        {/* Main Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-4xl mx-auto space-y-6"
-          >
-            {/* Profile Information Card */}
-            <Card className="glass-card p-6 border-primary/20">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                  <User className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold">Profile Information</h2>
-                  <p className="text-sm text-muted-foreground">Update your personal details</p>
-                </div>
-              </div>
+        {/* Danger Zone Card */}
+        <SpotlightCard className="p-8 border-red-500/20 bg-red-500/5" spotlightColor="rgba(239, 68, 68, 0.1)">
+          <div className="flex items-start gap-4 mb-6">
+            <div className="w-12 h-12 rounded-2xl bg-red-500/10 flex items-center justify-center border border-red-500/20">
+              <AlertTriangle className="w-6 h-6 text-red-500" />
+            </div>
+            <div>
+              <h2 className="text-xl font-heading font-semibold text-red-400">Danger Zone</h2>
+              <p className="text-sm text-red-400/60">Irreversible account actions</p>
+            </div>
+          </div>
 
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="displayName">Display Name</Label>
-                  <Input
-                    id="displayName"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="Enter your display name"
-                  />
-                </div>
+          <div className="p-6 rounded-xl bg-red-500/10 border border-red-500/20 backdrop-blur-sm">
+            <h3 className="font-semibold text-red-200 mb-2">Delete Account</h3>
+            <p className="text-sm text-red-300/70 mb-6 max-w-xl">
+              Once you delete your account, there is no going back. All your campaigns, email sequences, and data will be permanently deleted. This action cannot be undone.
+            </p>
 
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    disabled
-                    className="bg-muted/50"
-                  />
-                  <p className="text-xs text-muted-foreground">Email cannot be changed for security reasons</p>
-                </div>
-
-                <Button onClick={handleSaveProfile} disabled={saving} className="w-full sm:w-auto">
-                  <Save className="w-4 h-4 mr-2" />
-                  {saving ? "Saving..." : "Save Changes"}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" className="bg-red-500 hover:bg-red-600 border-none shadow-lg shadow-red-500/20">
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete My Account
                 </Button>
-              </div>
-            </Card>
-
-            {/* Account Information Card */}
-            <Card className="glass-card p-6 border-primary/20">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                  <Shield className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold">Account Information</h2>
-                  <p className="text-sm text-muted-foreground">Your account details and status</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30">
-                  <div className="flex items-center gap-3">
-                    <Mail className="w-5 h-5 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">Email Address</p>
-                      <p className="text-sm text-muted-foreground">{email}</p>
-                    </div>
-                  </div>
-                  <div className="px-3 py-1 rounded-full bg-green-500/10 text-green-500 text-xs font-medium">
-                    Verified
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30">
-                  <div className="flex items-center gap-3">
-                    <Calendar className="w-5 h-5 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">Member Since</p>
-                      <p className="text-sm text-muted-foreground">{createdAt}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30">
-                  <div className="flex items-center gap-3">
-                    <User className="w-5 h-5 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">User ID</p>
-                      <p className="text-sm text-muted-foreground font-mono">{user?.id?.slice(0, 18)}...</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Danger Zone Card */}
-            <Card className="glass-card p-6 border-destructive/20">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center">
-                  <Trash2 className="w-5 h-5 text-destructive" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold">Danger Zone</h2>
-                  <p className="text-sm text-muted-foreground">Irreversible account actions</p>
-                </div>
-              </div>
-
-              <Separator className="my-4" />
-
-              <div className="space-y-4">
-                <div className="p-4 rounded-lg bg-destructive/5 border border-destructive/20">
-                  <h3 className="font-medium mb-2">Delete Account</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Once you delete your account, there is no going back. All your campaigns, email sequences, and data will be permanently deleted. This action cannot be undone.
-                  </p>
-                  
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" className="w-full sm:w-auto">
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete My Account
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently delete your account and remove all your data from our servers.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive hover:bg-destructive/90">
-                          Yes, Delete My Account
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-        </div>
-      </div>
-    </div>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete your account and remove all your data from our servers.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive hover:bg-destructive/90">
+                    Yes, Delete My Account
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </SpotlightCard>
+      </motion.div>
+    </DashboardLayout>
   );
 };
 
