@@ -36,7 +36,7 @@ const Index = () => {
             <Link to="/" className="flex items-center gap-3 group">
               <img
                 src={mailgenproIcon}
-                alt="Vayno"
+                alt="Mailgenpro"
                 className="w-10 h-10 transition-transform duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_12px_rgba(35,255,128,0.5)]"
               />
               <span className="font-bold text-2xl tracking-tight text-foreground">
@@ -118,11 +118,11 @@ const Index = () => {
                 </div>
 
                 <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold mb-10 leading-[0.95] tracking-tighter">
-                  Turn your website into <span className="gradient-text">emails that sell</span>.
+                  70% of your visitors leave without buying. <span className="gradient-text">Get them back automatically.</span>
                 </h1>
 
                 <p className="text-xl md:text-2xl mb-12 leading-relaxed text-muted-foreground max-w-xl">
-                  Stop staring at a blank screen. Mailgenpro analyzes your product page and generates a complete, sales-ready email sequence in seconds.
+                  Paste your store URL and generate complete abandoned-cart, welcome, and post-purchase sequences in under 30 seconds—ready to paste into Klaviyo, Mailchimp, or Shopify Email.
                 </p>
 
                 <motion.div
@@ -174,10 +174,10 @@ const Index = () => {
             className="text-center mb-20"
           >
             <h2 className="text-5xl md:text-6xl font-bold mb-6 tracking-tight">
-              Your website already has the answers.
+              Launch flows 10x faster.
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              We extract your brand voice, value propositions, and social proof to write emails that sound exactly like you—only better.
+              Go from blank account to fully written cart, welcome, and post-purchase flows in minutes—not weeks waiting on an agency.
             </p>
           </motion.div>
 
@@ -237,10 +237,10 @@ const Index = () => {
             viewport={{ once: true }}
           >
             <h2 className="text-6xl md:text-7xl font-bold mb-8 tracking-tight leading-tight">
-              Ready to automate your<br />email marketing?
+              Ready to recover lost revenue?
             </h2>
             <p className="text-2xl mb-16 text-muted-foreground max-w-2xl mx-auto">
-              Join thousands of founders who save hours every week with Mailgenpro.
+              Join thousands of e-commerce founders who recover 10-20% of lost sales with Mailgenpro.
             </p>
             <Button
               size="lg"
@@ -271,7 +271,7 @@ const Index = () => {
                 <span className="font-bold text-xl">Mailgenpro</span>
               </div>
               <p className="text-sm text-muted-foreground max-w-xs">
-                Helping founders and sales teams write high-converting cold emails in seconds.
+                Mailgenpro helps e-commerce founders recover lost revenue and set up high-converting lifecycle flows—no copywriter needed.
               </p>
             </div>
 
@@ -287,10 +287,9 @@ const Index = () => {
             <div>
               <h3 className="font-semibold mb-4">Use Cases</h3>
               <ul className="space-y-3 text-sm text-muted-foreground">
-                <li><Link to="/use-cases/founders" className="hover:text-primary transition-colors">For Founders</Link></li>
-                <li><Link to="/use-cases/sales" className="hover:text-primary transition-colors">For Sales Teams</Link></li>
-                <li><Link to="/use-cases/recruiters" className="hover:text-primary transition-colors">For Recruiters</Link></li>
-                <li><Link to="/use-cases/freelancers" className="hover:text-primary transition-colors">For Freelancers</Link></li>
+                <li><Link to="/use-cases/founders" className="hover:text-primary transition-colors">For Shopify Stores</Link></li>
+                <li><Link to="/use-cases/founders" className="hover:text-primary transition-colors">For WooCommerce</Link></li>
+                <li><Link to="/use-cases/founders" className="hover:text-primary transition-colors">For Email Agencies</Link></li>
               </ul>
             </div>
 

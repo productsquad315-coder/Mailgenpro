@@ -106,7 +106,7 @@ const Usage = () => {
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Track your AI email generation usage for this billing period
+                    Track your revenue flow generation usage for this billing period
                   </p>
                 </div>
                 {generationsRemaining <= 5 && generationsRemaining > 0 && (

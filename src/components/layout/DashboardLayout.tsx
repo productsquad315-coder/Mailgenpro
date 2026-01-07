@@ -25,7 +25,7 @@ const DashboardLayout = ({ children, headerTitle, headerDescription, actionSlot 
                     <div className="flex items-center justify-between px-4 py-4">
                         <div className="flex items-center gap-3">
                             <MobileSidebar />
-                            <span className="font-heading font-bold text-lg">MailGenPro</span>
+                            <span className="font-heading font-bold text-lg">Mailgenpro</span>
                         </div>
                         {actionSlot && <div className="flex items-center gap-2">{actionSlot}</div>}
                     </div>

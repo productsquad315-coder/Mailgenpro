@@ -50,6 +50,7 @@ const CreateCampaign = () => {
   const [customEmails, setCustomEmails] = useState("");
   const [brandGuidelinesFile, setBrandGuidelinesFile] = useState<File | null>(null);
   const [templateStyle, setTemplateStyle] = useState('minimal');
+  const [copyTone, setCopyTone] = useState('authentic');
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [showOutOfCreditsModal, setShowOutOfCreditsModal] = useState(false);
 
@@ -161,7 +162,10 @@ const CreateCampaign = () => {
           words_per_email: wordsNum,
           include_cta: includeCTA,
           cta_link: ctaLink || null,
-          analyzed_data: { template_style: templateStyle } // Store style for AI to read
+          analyzed_data: {
+            template_style: templateStyle,
+            copy_tone: copyTone
+          } // Store style and tone for AI
         })
         .select()
         .single();
@@ -260,10 +264,10 @@ const CreateCampaign = () => {
 
           <div className="max-w-2xl mb-10">
             <h1 className="text-3xl md:text-4xl font-bold mb-4 tracking-tight">
-              {isGuest ? "Let's create your first sequence" : "New campaign"}
+              {isGuest ? "Launch your first revenue flow" : "New revenue recovery flow"}
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed">
-              Drop your product URL. We'll handle the rest.
+              Paste your store URL. We'll generate a high-ROI sequence in seconds.
             </p>
           </div>
 
@@ -337,35 +341,69 @@ const CreateCampaign = () => {
               </div>
 
               <div>
-                <Label htmlFor="template-style" className="text-base font-medium">What's the vibe?</Label>
+                <Label htmlFor="template-style" className="text-base font-medium">Visual Layout</Label>
                 <div className="grid grid-cols-2 gap-4 mt-2">
                   <div
                     className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${templateStyle === 'minimal' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
                     onClick={() => setTemplateStyle('minimal')}
                   >
-                    <div className="font-semibold mb-1">Authentic / Minimal</div>
-                    <div className="text-xs text-muted-foreground">Clean, raw, human. No fluff.</div>
+                    <div className="font-semibold mb-1">Personal Letter</div>
+                    <div className="text-xs text-muted-foreground">High-deliverability plain text style.</div>
                   </div>
                   <div
-                    className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${templateStyle === 'bold' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
-                    onClick={() => setTemplateStyle('bold')}
+                    className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${templateStyle === 'branded' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
+                    onClick={() => setTemplateStyle('branded')}
                   >
-                    <div className="font-semibold mb-1">Bold / Loud</div>
-                    <div className="text-xs text-muted-foreground">High energy, punchy sentences.</div>
+                    <div className="font-semibold mb-1">Branded Minimal</div>
+                    <div className="text-xs text-muted-foreground">Clean structure with brand colors.</div>
                   </div>
                   <div
-                    className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${templateStyle === 'corporate' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
-                    onClick={() => setTemplateStyle('corporate')}
+                    className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${templateStyle === 'card' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
+                    onClick={() => setTemplateStyle('card')}
                   >
-                    <div className="font-semibold mb-1">Professional</div>
-                    <div className="text-xs text-muted-foreground">Polished, respectful, advisory.</div>
+                    <div className="font-semibold mb-1">Modern Card</div>
+                    <div className="text-xs text-muted-foreground">Featured card with focus on product.</div>
                   </div>
                   <div
-                    className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${templateStyle === 'tech' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
-                    onClick={() => setTemplateStyle('tech')}
+                    className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${templateStyle === 'editorial' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
+                    onClick={() => setTemplateStyle('editorial')}
                   >
-                    <div className="font-semibold mb-1">Tech / Analytical</div>
-                    <div className="text-xs text-muted-foreground">Data-driven, precise, logical.</div>
+                    <div className="font-semibold mb-1">Bold Editorial</div>
+                    <div className="text-xs text-muted-foreground">High-impact layout for announcements.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="copy-tone" className="text-base font-medium">Copywriting Voice</Label>
+                <div className="grid grid-cols-2 gap-4 mt-2">
+                  <div
+                    className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${copyTone === 'authentic' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
+                    onClick={() => setCopyTone('authentic')}
+                  >
+                    <div className="font-semibold mb-1">Authentic / Raw</div>
+                    <div className="text-xs text-muted-foreground">Honest, human, vulnerability-led.</div>
+                  </div>
+                  <div
+                    className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${copyTone === 'momentum' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
+                    onClick={() => setCopyTone('momentum')}
+                  >
+                    <div className="font-semibold mb-1">High-Momentum</div>
+                    <div className="text-xs text-muted-foreground">Direct-response, punchy, persuasive.</div>
+                  </div>
+                  <div
+                    className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${copyTone === 'expert' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
+                    onClick={() => setCopyTone('expert')}
+                  >
+                    <div className="font-semibold mb-1">Expert / Advisory</div>
+                    <div className="text-xs text-muted-foreground">Polished, authoritative, logical.</div>
+                  </div>
+                  <div
+                    className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${copyTone === 'story' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
+                    onClick={() => setCopyTone('story')}
+                  >
+                    <div className="font-semibold mb-1">Storyteller</div>
+                    <div className="text-xs text-muted-foreground">Narrative-heavy, curiosity-driven.</div>
                   </div>
                 </div>
               </div>

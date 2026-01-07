@@ -65,7 +65,7 @@ const TermsOfService = () => {
               </p>
               <ul className="list-disc list-inside text-muted-foreground space-y-2 ml-4">
                 <li>AI-powered email sequence generation</li>
-                <li>Multiple sequence types (Cold Outreach, Product Launch, Onboarding, Re-engagement)</li>
+                <li>Elite conversion flows (Abandoned Cart Recovery, Welcome/VIP, Post-Purchase Loyalty, Customer Win-Back)</li>
                 <li>Campaign management and organization</li>
                 <li>Email customization and editing capabilities</li>
                 <li>Translation services for multi-language campaigns</li>

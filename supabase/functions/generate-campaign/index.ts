@@ -144,6 +144,7 @@ serve(async (req) => {
     // Fetch URL content with Multi-Level Strategy
     let pageContent = "";
     let cleanBody = "";
+    let primaryColor = "#7c3aed"; // Default Mailgenpro purple
 
     try {
       console.log(`[SCRAPER] Level 1: Fetching ${url}`);
@@ -181,6 +182,13 @@ serve(async (req) => {
             } catch (e) { /* ignore parse errors */ }
           });
         }
+
+        // --- BRAND COLOR EXTRACTION ---
+        const colorRegex = /#(?:[0-9a-fA-F]{3}){1,2}\b/g;
+        const potentialColors = html.match(colorRegex) || [];
+        // Filter out common colors like #fff, #000, #eee
+        const brandColors = potentialColors.filter(c => !['#ffffff', '#000000', '#eeeeee', '#cccccc', '#ffffff', '#000'].includes(c.toLowerCase()));
+        primaryColor = brandColors[0] || primaryColor;
 
         // --- META TAG EXTRACTION ---
         const metaDescMatch = html.match(/<meta\s+name=["']description["']\s+content=["'](.*?)["']/i);
@@ -292,16 +300,26 @@ ${cleanBody.substring(0, 15000)}
     const dripDuration = campaignDetails?.drip_duration || "7-day";
     // Read template style from JSONB column to avoid safe schema migration issues
     const templateStyle = campaignDetails?.analyzed_data?.template_style || "minimal";
+    const copyTone = campaignDetails?.analyzed_data?.copy_tone || "authentic";
 
-    // Style-Specific Strategy Overrides
-    const styleInstructions = {
-      minimal: "Tone: Pure, raw authenticity. No visual distractions. Focus 100% on the text.",
-      bold: "Tone: Confident, loud, and authoritative. Use punchy short sentences.",
-      tech: "Tone: Precise, data-driven, and analytical. Use bullet points and logic.",
-      corporate: "Tone: Professional, polished, and respectful. Use complete sentences and 'advisory' formality."
+    // Layout-Specific HTML/CSS Strategies
+    const layoutInstructions = {
+      minimal: "HTML: Pure, raw text-based HTML. Only <a> tags allowed. No borders, no cards. Looks like a personal email from a friend's Gmail.",
+      branded: `HTML: Clean, professional structure. Use a 1px solid #e2e8f0 border around a container. Use ${primaryColor} for the CTA button background and important links. Standard 16px font-size.`,
+      card: `HTML: Place the primary offer inside a rounded card with a subtle shadow (box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1)). Use ${primaryColor} for the primary header and button.`,
+      editorial: `HTML: High-impact typography. Large bold headers. Use ${primaryColor} as a background for a full-width header section or footer. Dramatic but clean.`
     };
 
-    const selectedStyleInstruction = styleInstructions[templateStyle as keyof typeof styleInstructions] || styleInstructions.minimal;
+    // Tone-Specific Copywriting Strategies
+    const toneInstructions = {
+      authentic: "Strategy: Raw, vulnerability-led authenticity. Staccato rhythm. Admit imperfections. No hype. Use asides (like this).",
+      momentum: "Strategy: High-momentum, direct-response. Aggressive hooks. Punchy short sentences. High-urgency triggers. Scarcity-focused.",
+      expert: "Strategy: Professional Advisory. Data-driven, precise, logical. Authoritative but respectful. Institutional knowledge style.",
+      story: "Strategy: Narrative-heavy 'Storyteller' vibe. Flowy, curiosity-driven loops. Build the 'Enemy' and 'Hero' arc throughout the email."
+    };
+
+    const selectedLayoutInstruction = layoutInstructions[templateStyle as keyof typeof layoutInstructions] || layoutInstructions.minimal;
+    const selectedToneInstruction = toneInstructions[copyTone as keyof typeof toneInstructions] || toneInstructions.authentic;
 
     // === GOD-TIER PSYCHOLOGY MAP (10 CORE FLOWS) ===
     interface Strategy {
@@ -428,6 +446,10 @@ ${cleanBody.substring(0, 15000)}
             - Email 1: "It's back." (Simple notification).
             - Email 2: "Moving fast." (Social proof/Scarcity).
             - Email 3: "Almost gone again." (Urgency).
+            
+            BEST HUMAN PRACTICES:
+            - Use "Inventory Control" language (e.g. "We only found 47 units").
+            - Avoid "Marketing Speak" - sound like a logistics manager.
             `
       },
       // --- FOUNDER FLOWS ---
@@ -439,6 +461,10 @@ ${cleanBody.substring(0, 15000)}
             - Email 1: "You've achieved X." (Validate progress).
             - Email 2: "What you will lose." (Loss aversion - losing access to data/features).
             - Email 3: "The easy transition." (Remove friction to upgrade).
+            
+            BEST HUMAN PRACTICES:
+            - Use specific user-focused milestones.
+            - Frame the upgrade as "Protecting your work" rather than "Paying us".
             `
       },
       "feature-announcement": {
@@ -508,8 +534,16 @@ ${cleanBody.substring(0, 15000)}
       "re-engagement": "win-back",
       "vip-loyalty": "vip",
       "welcome-onboarding": "welcome",
+      "welcome-vip": "welcome",
       "expansion-upgrade": "upsell",
-      "activation": "customer-success"
+      "expansion-upsell": "upsell",
+      "activation": "customer-success",
+      "feature-activation": "feature-announcement",
+      "post-purchase-loyalty": "post-purchase",
+      "review-referral": "review-request",
+      "educational-nurture": "educational-nurture",
+      "founder-story": "founder-story",
+      "checkout-abandonment": "checkout-abandonment"
     };
 
     let campaignSequenceType = campaignDetails?.sequence_type || "welcome";
@@ -618,15 +652,27 @@ HOOK: ${blueprint.hook}
 
     const ctaConstraint = constraints.map(c => `- ${c}`).join("\n");
 
-    const systemPrompt = `YOU ARE THE "GOD-TIER" DIRECT RESPONSE EMAIL STRATEGIST.
-You are a composite intelligence of the world's greatest copywriters (Eugene Schwartz, Gary Halbert, David Ogilvy).
-Your goal is to write email sequences that are INDISTINGUISHABLE from top-tier human copywriters.
+    const systemPrompt = `YOU ARE THE "TOP 1%" DIRECT RESPONSE EMAIL STRATEGIST.
+You are a composite intelligence of the world's greatest copywriters (Eugene Schwartz, Gary Halbert, David Ogilvy, and modern masters like Bond Halbert).
+Your objective is to produce emails that don't just "inform"—they convert by leveraging deep psychology and impeccable brand alignment.
+Every word must feel like it was hand-crafted by a human pro earning $1,000/hour.
 
-=== CAMPAIGN CONTEXT: ${campaignDetails?.name || "Unnamed Campaign"} ===
-Use this name to frame the specific angle or product focus if relevant.
+=== THE MANIFESTO: TRUTH OVER MARKETING ===
+1. TRADITIONAL MARKETING IS DEAD. People buy from people. Use "Micro-vulnerability" to build trust.
+2. AUTHORITY IS QUIET. Don't use exclamation points to convey excitement. Use vivid imagery and high-stakes logic.
+3. THE INBOX IS SACRED. If your email is boring, you are trespassing.
 
-=== VISUAL STYLE ALIGNMENT: ${templateStyle.toUpperCase()} ===
-${selectedStyleInstruction}
+=== BRAND PERSONA SYNC ===
+MATCH the exact tone of the Landing Page content. 
+- If the landing page is "Edgy/Rebellious", use slang and short, punchy sentence fragments.
+- If it is "Academic/High-End", use multisyllabic precision and industry jargon.
+- If it is "Friend-to-Friend", use lower-case casual starts and self-deprecating humor.
+
+=== VISUAL LAYOUT ALIGNMENT: ${templateStyle.toUpperCase()} ===
+${selectedLayoutInstruction}
+
+=== COPYWRITING VOICE: ${copyTone.toUpperCase()} ===
+${selectedToneInstruction}
 
 ${blueprintContext}
 
@@ -654,61 +700,36 @@ ${ctaConstraint}
 > - **Specificity > Generality**: Never say "save time". Say "save 17 minutes every Monday".
 
 === HUMAN WRITING SOPs: THE "IRONCLAD" STANDARD (NUCLEAR GRADE) ===
-> OBJECTIVE: To create email content that creates **Intellectual Curiosity**, not "Marketing Hype".
+> OBJECTIVE: To create content that generates **Intellectual Curiosity**, not "Marketing Hype".
 > PASS/FAIL: If the recipient knows it's a mass email within 0.5 seconds, the email is TRASH.
 
-1. THE "KILL SWITCH" LIST (INSTANT FAIL) - NEVER USE THESE:
-   - ❌ AI-isms: "Embark", "Tapestry", "Delve", "Harness", "Robust", "Revolutionize", "Navigate", "Synergy", "Empower", "Comprehensive", "Pioneering", "Innovative", "Unlock", "Seamlessly", "Cutting-edge", "Game-changer".
+1. THE "AI-ISM" BLACKLIST (INSTANT FAIL) - NEVER USE THESE:
+   - ❌ AI-isms: "Embark", "Tapestry", "Delve", "Harness", "Robust", "Revolutionize", "Navigate", "Synergy", "Empower", "Comprehensive", "Pioneering", "Innovative", "Unlock", "Seamlessly", "Cutting-edge", "Game-changer", "Furthermore", "Additionally", "Moreover", "In conclusion", "Looking ahead", "Ultimate guide", "Elevate".
    - ❌ "I hope this email finds you well"
    - ❌ "I wanted to reach out"
    - ❌ "Allow me to introduce myself"
-   - ❌ "Apologies for the intrusion"
 
-2. THE "5TH GRADE" VOCABULARY BASELINE (BAR-TALK ONLY)
-   - Banish all corporate jargon and "fancy" words.
-   - Use simple, grounded words. Replace "Utilize" with "Use". Replace "Facilitate" with "Help".
-   - If a 10-year-old wouldn't use it, DON'T USE IT.
+2. THE "HUMAN QUIRK" PROTOCOL (BREAK THE ROBOT)
+   - **Micro-vulnerability**: Share a "behind the scenes" struggle or mistake. (e.g., "Full disclosure: we almost cancelled this product launch because we weren't sure the colors were right.")
+   - **Parenthetical Asides**: Use asides to sound like a human blogger. (e.g., "(honestly, it's a bit of a mess right now)", "(I know everyone says that, but stay with me)").
+   - **Sentence Cadence**: Use a "Staccato" rhythm. Short. Short. Long. (e.g., "It works. It's fast. And frankly, it's the only way we've found to keep costs down while scaling.")
+   - **Industry Insider Jargon**: Use terms only an expert would know. (e.g., "instead of 'shipping', say 'last-mile logistics' if it fits the brand").
+   - **Admit Imperfection**: Be real. Don't say "We are the best". Say "We've spent 2 years failing at this before finally figuring it out."
 
-3. THE "ADJECTIVE PURGE"
+3. THE "ADJECTIVE PURGE" & "BAR TEST"
    - Banish 90% of adjectives. Adjectives are where lies hide.
-   - BAD: "Our comprehensive, powerful dashboard..."
-   - GOOD: "Our dashboard..."
+   - Read it out loud. If you wouldn't say it to a friend at a bar, REWRITE IT.
+   - 5th Grade Vocabulary: Replace "Utilize" with "Use". Replace "Facilitate" with "Help".
 
-4. THE "BAR TEST" (TONE CHECK)
-   - Read the email out loud. If you wouldn't say it to a friend at a bar, REWRITE IT.
-   - Peer-to-Peer Tone: You are a consultant, not a salesperson.
-
-5. STRUCTURAL MIMICRY: THE "BUSY HUMAN" PROTOCOL
-   - No paragraph > 2 lines on mobile.
-   - Use sentence fragments. (e.g., "Fast. Reliable. Simple.")
-   - "Liquid Syntax": Never start two consecutive sentences with "We" or "I".
+4. THE "SO WHAT?" COVENANT (BENEFIT > FEATURE)
+   - Every claim must answer: "So what?"
+   - Feature: "We have AI-driven logic."
+   - Benefit: "You stop wasting 3 hours a day manually checking leads." (USE THIS ONLY).
 
 === CONTENT SAFETY GUARDRAILS: THE "PARANOID" WRITER PROTOCOL ===
-> SCOPE: STRICTLY CONTENT-BASED SPAM AVOIDANCE.
-> RULE: We write "Letters", not "Flyers".
-
-1. TECHNICAL "HYGIENE"
-   - 100% PLAIN TEXT. No <div>, <table>, or <img> tags.
-   - Exception: Minimal <br> and <p> only.
-
-2. THE "ONE LINK" LAW
-   - Cold Layer (Email 1-2): ZERO LINKS (unless explicitly requested).
-   - Warm Layer (Email 3+): Max 1 link.
-   - NEVER use "Click Here". Use raw URLs (mailgenpro.com) or "Reply 'link'".
-
-3. THE "SPAM TRAP" DEFENSE (BANNED WORDS)
-   - $$$ / Cash / Bonus / Discount / Free / Urgent / Act Now / Limited Time / Guarantee.
-
-4. THE "GET STARTED" CTA PROTOCOL (MANDATORY)
-   - NEVER use a "Get Started" button or generic link.
-   - OPTION A (Permission Loop): "Reply 'start' and I'll send the guide." (Safest)
-   - OPTION B (Soft Link): "If you want to dive in, you can start here: [Link]"
-
-=== THE "SMART EXPANSION" PROTOCOL (LENGTH ENFORCEMENT) ===
-If you need length, DO NOT FLUFF. Use:
-1. "The Micro-Story": A 3-sentence case study.
-2. "The Deeper Why": Explain the MECHANISM (Why it works).
-3. "The Cost of Inaction": What happens if they don't buy?
+1. TECHNICAL "HYGIENE": 100% PLAIN TEXT. No <div> or <table>. Use raw URLs or soft links.
+2. THE "SPAM TRAP" DEFENSE: Avoid words like $$$ / Cash / Bonus / Guarantee / Urgent / Act Now.
+3. THE "PERMISSION LOOP" CTA: Instead of "Buy Now", try "Worth a 2-min look?" or "Reply 'Yes' and I'll send the details."
 
 EXECUTE.`;
 

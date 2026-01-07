@@ -38,6 +38,8 @@ const GuestCampaignFlow = () => {
   const [dripDuration, setDripDuration] = useState("");
   const [emailCount, setEmailCount] = useState("");
   const [wordCount, setWordCount] = useState("");
+  const [layoutType, setLayoutType] = useState("minimal");
+  const [copyTone, setCopyTone] = useState("authentic");
 
   const handleNext = () => {
     if (step === 1 && !url) {
@@ -80,6 +82,10 @@ const GuestCampaignFlow = () => {
       toast.error("Please enter a valid word count (minimum 50 words)");
       return;
     }
+    if (step === 5 && (!layoutType || !copyTone)) {
+      toast.error("Please select a layout and tone");
+      return;
+    }
 
     setStep(step + 1);
   };
@@ -106,6 +112,10 @@ const GuestCampaignFlow = () => {
           words_per_email: parseInt(wordCount),
           status: "pending",
           user_id: null, // Guest campaign
+          analyzed_data: {
+            template_style: layoutType,
+            copy_tone: copyTone
+          }
         })
         .select()
         .single();
@@ -157,13 +167,13 @@ const GuestCampaignFlow = () => {
         {/* Progress Indicator */}
         <div className="max-w-2xl mx-auto mb-12">
           <div className="flex items-center justify-between mb-2">
-            {[1, 2, 3, 4, 5].map((s) => (
+            {[1, 2, 3, 4, 5, 6].map((s) => (
               <div key={s} className="flex items-center flex-1">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${s <= step ? 'bg-primary text-primary-foreground shadow-lg scale-110' : 'bg-muted text-muted-foreground'
                   }`}>
                   {s}
                 </div>
-                {s < 5 && (
+                {s < 6 && (
                   <div className={`flex-1 h-1 mx-2 rounded transition-all ${s < step ? 'bg-primary' : 'bg-muted'
                     }`} />
                 )}
@@ -175,6 +185,7 @@ const GuestCampaignFlow = () => {
             <span>Platform</span>
             <span>Type</span>
             <span>Duration</span>
+            <span>Style</span>
             <span>Generate</span>
           </div>
         </div>
@@ -264,10 +275,10 @@ const GuestCampaignFlow = () => {
                           </div>
                           <div className="flex-1">
                             <h3 className="text-xl font-semibold mb-2">
-                              Seller (Shopify / ecommerce)
+                              E-commerce (Shopify / WooCommerce)
                             </h3>
                             <p className="text-sm text-muted-foreground">
-                              For Shopify stores, dropshipping, ecommerce, POD, DTC brands
+                              Uses Loss-Aversion and psychological triggers to recover abandoned revenue.
                             </p>
                           </div>
                         </div>
@@ -286,10 +297,10 @@ const GuestCampaignFlow = () => {
                           </div>
                           <div className="flex-1">
                             <h3 className="text-xl font-semibold mb-2">
-                              Founder (SaaS / newsletters / digital products)
+                              SaaS / Digital Products
                             </h3>
                             <p className="text-sm text-muted-foreground">
-                              For SaaS founders, indie hackers, newsletters, startup builders, coaches
+                              AHA-moment activation drips and systematic conversion flows for founders.
                             </p>
                           </div>
                         </div>
@@ -459,10 +470,93 @@ const GuestCampaignFlow = () => {
               </motion.div>
             )}
 
-            {/* Step 5: Word Count & Generate */}
+            {/* Step 5: Visuals & Tone */}
             {step === 5 && (
               <motion.div
                 key="step5"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Card className="relative overflow-hidden border-2 border-primary/20 backdrop-blur-xl bg-background/95 p-12">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
+                  <div className="relative">
+                    <div className="text-center mb-8">
+                      <h2 className="text-3xl font-bold mb-3">Visuals & Voice</h2>
+                      <p className="text-muted-foreground">Tailor the look and feel of your sequence</p>
+                    </div>
+
+                    <div className="space-y-8">
+                      <div>
+                        <Label className="text-lg font-semibold mb-4 block">Visual Template</Label>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          {[
+                            { id: 'minimal', label: 'Letter', desc: 'Plain text' },
+                            { id: 'branded', label: 'Branded', desc: 'Minimalist' },
+                            { id: 'card', label: 'Card', desc: 'Modern' },
+                            { id: 'editorial', label: 'Bold', desc: 'Editorial' },
+                          ].map((t) => (
+                            <button
+                              key={t.id}
+                              onClick={() => setLayoutType(t.id)}
+                              className={`p-4 rounded-xl border-2 transition-all text-left ${layoutType === t.id ? 'border-primary bg-primary/5 shadow-md scale-105' : 'border-border hover:border-primary/30'}`}
+                            >
+                              <div className="font-bold text-sm">{t.label}</div>
+                              <div className="text-[10px] text-muted-foreground">{t.desc}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label className="text-lg font-semibold mb-4 block">Copywriting Tone</Label>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          {[
+                            { id: 'authentic', label: 'Raw', desc: 'Authentic' },
+                            { id: 'momentum', label: 'Hooks', desc: 'Momentum' },
+                            { id: 'expert', label: 'Expert', desc: 'Advisory' },
+                            { id: 'story', label: 'Story', desc: 'Narrative' },
+                          ].map((t) => (
+                            <button
+                              key={t.id}
+                              onClick={() => setCopyTone(t.id)}
+                              className={`p-4 rounded-xl border-2 transition-all text-left ${copyTone === t.id ? 'border-primary bg-primary/5 shadow-md scale-105' : 'border-border hover:border-primary/30'}`}
+                            >
+                              <div className="font-bold text-sm">{t.label}</div>
+                              <div className="text-[10px] text-muted-foreground">{t.desc}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="wordCount" className="text-lg font-semibold mb-4 block">Words Per Email</Label>
+                        <Input
+                          id="wordCount"
+                          type="number"
+                          placeholder="e.g. 250"
+                          value={wordCount}
+                          onChange={(e) => setWordCount(e.target.value)}
+                          className="h-14 text-lg border-2 focus:border-primary transition-all"
+                          min="50"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 mt-8">
+                      <Button variant="outline" size="lg" onClick={handleBack} className="flex-1">Back</Button>
+                      <Button size="lg" onClick={handleNext} className="flex-1 btn-premium">Next</Button>
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Step 6: Summary & Generate */}
+            {step === 6 && (
+              <motion.div
+                key="step6"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
@@ -476,50 +570,28 @@ const GuestCampaignFlow = () => {
                       <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
                         <FileText className="w-8 h-8 text-primary" />
                       </div>
-                      <h2 className="text-3xl font-bold mb-3">Email Length Preference</h2>
-                      <p className="text-muted-foreground">
-                        Choose how detailed you want each email to be
-                      </p>
+                      <h2 className="text-3xl font-bold mb-3">Your Conversion Flow</h2>
+                      <p className="text-muted-foreground">Ready to launch your revenue-recovery sequence?</p>
                     </div>
 
                     <div className="space-y-6">
-                      <div>
-                        <Label htmlFor="wordCount" className="text-base mb-2 block">
-                          Words per email
-                        </Label>
-                        <Input
-                          id="wordCount"
-                          type="number"
-                          placeholder="Enter word count (e.g., 250, 500, 750)"
-                          value={wordCount}
-                          onChange={(e) => setWordCount(e.target.value)}
-                          className="h-14 text-lg border-2 focus:border-primary transition-all"
-                          min="50"
-                        />
-                      </div>
-
                       <div className="bg-muted/30 rounded-xl p-6">
-                        <h4 className="font-semibold mb-3">Your Campaign Summary:</h4>
                         <div className="grid md:grid-cols-2 gap-4 text-sm">
                           <div>
-                            <span className="text-muted-foreground">URL:</span>
-                            <p className="font-medium truncate">{url}</p>
+                            <span className="text-muted-foreground">Flow Name:</span>
+                            <p className="font-medium truncate">{new URL(url).hostname} Recovery</p>
                           </div>
                           <div>
                             <span className="text-muted-foreground">Sequence:</span>
                             <p className="font-medium">{getSequenceTypes(userPlatform).find(s => s.value === sequenceType)?.label}</p>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">Duration:</span>
-                            <p className="font-medium">{dripDuration} days</p>
+                            <span className="text-muted-foreground">Layout & Tone:</span>
+                            <p className="font-medium capitalize">{layoutType} / {copyTone}</p>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">Number of emails:</span>
-                            <p className="font-medium">{emailCount || '—'} emails</p>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Words per email:</span>
-                            <p className="font-medium">{wordCount || '—'} words</p>
+                            <span className="text-muted-foreground">Emails:</span>
+                            <p className="font-medium">{emailCount} emails over {dripDuration} days</p>
                           </div>
                         </div>
                       </div>
@@ -539,7 +611,7 @@ const GuestCampaignFlow = () => {
                           className="flex-1 btn-premium"
                           disabled={submitting}
                         >
-                          {submitting ? "Generating..." : "Analyze & Generate"}
+                          {submitting ? "Building..." : "Launch Campaign"}
                           {!submitting && <Sparkles className="w-5 h-5 ml-2" />}
                         </Button>
                       </div>

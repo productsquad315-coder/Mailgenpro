@@ -5,20 +5,20 @@ const HowItWorks = () => {
   const steps = [
     {
       number: "01",
-      title: "Paste Your URL",
-      description: "Drop in your landing page or product URL. That's it.",
+      title: "Paste Store URL",
+      description: "Drop in your homepage or any product URL from Shopify or WooCommerce.",
       icon: Link2,
     },
     {
-      number: "02", 
-      title: "AI Scans & Writes",
-      description: "We analyze your page and generate a complete email sequence in seconds.",
+      number: "02",
+      title: "Generate Flows",
+      description: "Our AI analyzes your products and writes complete, high-ROI lifecycle sequences in seconds.",
       icon: Sparkles,
     },
     {
       number: "03",
-      title: "Export & Launch",
-      description: "Download HTML files ready for any ESP. Load them up and start converting.",
+      title: "Export to ESP",
+      description: "Download HTML files and paste them straight into Klaviyo, Mailchimp, or Shopify Email.",
       icon: Download,
     }
   ];
@@ -38,7 +38,7 @@ const HowItWorks = () => {
             {/* Connecting line */}
             {index < steps.length - 1 && (
               <div className="hidden md:block absolute top-1/3 left-full w-full h-[2px] -z-10">
-                <motion.div 
+                <motion.div
                   initial={{ scaleX: 0 }}
                   whileInView={{ scaleX: 1 }}
                   transition={{ duration: 0.8, delay: index * 0.2 + 0.4 }}
@@ -55,7 +55,7 @@ const HowItWorks = () => {
               </div>
 
               {/* Icon */}
-              <motion.div 
+              <motion.div
                 whileHover={{ scale: 1.1, rotate: 5 }}
                 transition={{ type: "spring", stiffness: 300 }}
                 className="relative mb-8"
@@ -65,7 +65,7 @@ const HowItWorks = () => {
                   <step.icon className="w-8 h-8 text-primary" strokeWidth={1.5} />
                 </div>
               </motion.div>
-              
+
               <h3 className="text-2xl font-bold mb-4">{step.title}</h3>
               <p className="text-muted-foreground text-lg leading-relaxed">{step.description}</p>
 

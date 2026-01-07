@@ -45,20 +45,20 @@ const MailGenProVsCopyAI = () => {
 
                     <div className="grid md:grid-cols-2 gap-8">
                         <div className="bg-card p-6 rounded-lg border border-border">
-                            <h3 className="text-xl font-bold mb-4">MailGenPro</h3>
-                            <p className="text-muted-foreground mb-4">Best for: Direct 1-to-1 Cold Outreach.</p>
+                            <h3 className="text-xl font-bold mb-4">Mailgenpro</h3>
+                            <p className="text-muted-foreground mb-4">Best for: Automated E-commerce Revenue Recovery.</p>
                             <ul className="space-y-3">
                                 <li className="flex items-start gap-2">
                                     <Check className="w-5 h-5 text-green-500 shrink-0" />
-                                    <span>Focus on "plain text" personal emails</span>
+                                    <span>Focus on high-ROI lifecycle flows</span>
                                 </li>
                                 <li className="flex items-start gap-2">
                                     <Check className="w-5 h-5 text-green-500 shrink-0" />
-                                    <span>Optimized for reply rates</span>
+                                    <span>Optimized for recovery and win-back rates</span>
                                 </li>
                                 <li className="flex items-start gap-2">
                                     <Check className="w-5 h-5 text-green-500 shrink-0" />
-                                    <span>Simple workflow for founders</span>
+                                    <span>One-click Klaviyo & Shopify integrations</span>
                                 </li>
                             </ul>
                         </div>
@@ -86,13 +86,13 @@ const MailGenProVsCopyAI = () => {
                     <div className="prose prose-invert max-w-none">
                         <h3>The Verdict</h3>
                         <p className="text-muted-foreground text-lg">
-                            <strong>Copy.ai</strong> is a powerhouse for marketing teams. If you need to generate blog posts, Instagram captions, or Facebook ad copy, it is one of the best tools available.
+                            <strong>Copy.ai</strong> is a powerhouse for marketing teams writing general copy like blog posts, Instagram captions, or Facebook ads.
                         </p>
                         <p className="text-muted-foreground text-lg">
-                            However, cold email is distinct from marketing. It requires a more subtle, personal touch that marketing tools often miss.
+                            However, setting up a store's **revenue recovery system** is a specialized task. It requires specific flow structures (cart abandonment, browse-abandon, win-back) that marketing copy tools aren't built to handle out of the box.
                         </p>
                         <p className="text-muted-foreground text-lg">
-                            <strong>MailGenPro</strong> is focused entirely on that 1-to-1 connection. We don't try to write your blog posts. We focus on one thing: helping you write personal emails that get meetings. If your goal is to start conversations with prospects, MailGenPro is the specialized tool for the job.
+                            <strong>Mailgenpro</strong> is focused entirely on e-commerce revenue. We don't try to write your social media posts. We focus on one thing: helping you recover lost customers with structured, scientific email flows that you can launch in under 60 seconds.
                         </p>
                     </div>
 

@@ -33,13 +33,13 @@ const UseCaseFounders = () => {
                     {/* Hero */}
                     <div className="text-center space-y-6">
                         <div className="inline-block px-3 py-1 bg-primary/10 rounded-full text-primary text-sm font-medium mb-2">
-                            Use Case: Founders
+                            Use Case: E-commerce Founders
                         </div>
                         <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-                            Cold Email for Founders
+                            Email Revenue Recovery for Shopify & WooCommerce
                         </h1>
                         <p className="text-2xl font-medium text-foreground leading-tight max-w-2xl mx-auto">
-                            Validate ideas and book your first meetings without sounding salesy.
+                            Turn your existing traffic into revenue with ready-to-launch flows: abandoned cart, welcome, and win-back.
                         </p>
                     </div>
 
@@ -50,7 +50,7 @@ const UseCaseFounders = () => {
                                 Who is this for?
                             </h2>
                             <p className="text-muted-foreground leading-relaxed">
-                                Early-stage founders, solo entrepreneurs, and indie hackers who are building their MVP or seeking their first 100 customers.
+                                Shopify and WooCommerce store owners who have healthy traffic but are leaving money on the table due to incomplete or generic email flows.
                             </p>
                         </div>
 
@@ -60,7 +60,7 @@ const UseCaseFounders = () => {
                                 The Problem
                             </h2>
                             <p className="text-muted-foreground leading-relaxed">
-                                You know your product is great, but you hate "selling." Most outreach advice feels slimy, and you don't have time to write hundreds of personalized emails while building your product.
+                                70% of your visitors leave without buying. Setting up professional "revenue recovery" flows (cart abandonment, browse-abandon) is slow and expensive.
                             </p>
                         </div>
                     </div>
@@ -74,8 +74,8 @@ const UseCaseFounders = () => {
                                     <CheckCircle2 className="w-5 h-5 text-primary" />
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold mb-2">Authentic Founder Voice</h3>
-                                    <p className="text-muted-foreground text-sm">Generates emails that sound like a human reaching out to solve a problem, not a marketing bot.</p>
+                                    <h3 className="font-semibold mb-2">High-ROI Flow Blueprints</h3>
+                                    <p className="text-muted-foreground text-sm">Generates battle-tested abandoned cart and welcome sequences used by top-performing stores.</p>
                                 </div>
                             </div>
                             <div className="flex gap-4">
@@ -83,8 +83,8 @@ const UseCaseFounders = () => {
                                     <CheckCircle2 className="w-5 h-5 text-primary" />
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold mb-2">Instant Value Proposition</h3>
-                                    <p className="text-muted-foreground text-sm">Automatically extracts your core value prop from your landing page to create compelling hooks.</p>
+                                    <h3 className="font-semibold mb-2">ESP-Ready HTML</h3>
+                                    <p className="text-muted-foreground text-sm">One-click export for Klaviyo, Mailchimp, and Shopify Email. No formatting headaches.</p>
                                 </div>
                             </div>
                         </div>
@@ -94,7 +94,7 @@ const UseCaseFounders = () => {
                     <div className="text-center py-8">
                         <h2 className="text-2xl font-bold mb-4">The Result</h2>
                         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                            More meetings with qualified prospects and faster product-market fit validation—all in less than 60 seconds per campaign.
+                            Recover 10-20% of lost carts and double your welcome series conversion rate—all in under 30 seconds.
                         </p>
                     </div>
 

@@ -36,7 +36,7 @@ const About = () => {
                             About MailGenPro
                         </h1>
                         <p className="text-2xl md:text-3xl font-medium text-foreground leading-tight">
-                            MailGenPro helps founders write high-converting cold emails in under 60 seconds—without sounding like AI.
+                            Mailgenpro helps e-commerce founders recover lost revenue and set up high-converting lifecycle flows—no copywriter needed.
                         </p>
                     </div>
 
@@ -44,10 +44,10 @@ const About = () => {
                     <section className="space-y-4">
                         <h2 className="text-2xl font-bold text-foreground">Why It Exists</h2>
                         <p className="text-muted-foreground text-lg leading-relaxed">
-                            MailGenPro was built to solve one specific problem: <span className="text-foreground font-medium">most AI-written emails sound robotic and get ignored.</span>
+                            Mailgenpro was built to solve one specific problem: <span className="text-foreground font-medium">setting up professional email flows is slow, expensive, and technical.</span>
                         </p>
                         <p className="text-muted-foreground text-lg leading-relaxed">
-                            Generic tools create generic spam. We built an engine that understands personalization, formatting, and the nuances of human-to-human connection, giving you a distinct advantage in the inbox.
+                            We help Shopify founders bypass expensive agencies and months of copy drafting. By analyzing your product URL directly, we generate battle-tested abandoned cart, welcome, and win-back sequences that follow proven high-ROI blueprints.
                         </p>
                     </section>
 
@@ -56,20 +56,20 @@ const About = () => {
                         <h2 className="text-2xl font-bold text-foreground">Who It's For</h2>
                         <ul className="grid sm:grid-cols-2 gap-4">
                             <li className="bg-card/50 p-4 rounded-lg border border-border/50">
-                                <span className="font-semibold block mb-1">Founders</span>
-                                <span className="text-muted-foreground text-sm">Validating ideas and booking first meetings.</span>
+                                <span className="font-semibold block mb-1">Shopify Founders</span>
+                                <span className="text-muted-foreground text-sm">Recovering 10% of lost sales with automated cart flows.</span>
                             </li>
                             <li className="bg-card/50 p-4 rounded-lg border border-border/50">
-                                <span className="font-semibold block mb-1">Sales Teams</span>
-                                <span className="text-muted-foreground text-sm">Scaling outreach without losing the personal touch.</span>
+                                <span className="font-semibold block mb-1">WooCommerce Stores</span>
+                                <span className="text-muted-foreground text-sm">Setting up high-converting welcome and post-purchase sequences.</span>
                             </li>
                             <li className="bg-card/50 p-4 rounded-lg border border-border/50">
-                                <span className="font-semibold block mb-1">Recruiters</span>
-                                <span className="text-muted-foreground text-sm">Connecting with top talent meaningfully.</span>
+                                <span className="font-semibold block mb-1">Email Agencies</span>
+                                <span className="text-muted-foreground text-sm">Scaling client flow setup 10x faster without extra writers.</span>
                             </li>
                             <li className="bg-card/50 p-4 rounded-lg border border-border/50">
-                                <span className="font-semibold block mb-1">Freelancers</span>
-                                <span className="text-muted-foreground text-sm">Winning clients with professional pitches.</span>
+                                <span className="font-semibold block mb-1">E-commerce Operators</span>
+                                <span className="text-muted-foreground text-sm">Managing global stores with multi-language revenue recovery.</span>
                             </li>
                         </ul>
                     </section>

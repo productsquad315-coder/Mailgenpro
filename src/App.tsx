@@ -33,9 +33,6 @@ import SendingProgress from "./pages/SendingProgress";
 import About from "./pages/About";
 import FAQ from "./pages/FAQ";
 import UseCaseFounders from "./pages/use-cases/Founders";
-import UseCaseSales from "./pages/use-cases/Sales";
-import UseCaseRecruiters from "./pages/use-cases/Recruiters";
-import UseCaseFreelancers from "./pages/use-cases/Freelancers";
 import MailGenProVsChatGPT from "./pages/comparisons/MailGenProVsChatGPT";
 import MailGenProVsCopyAI from "./pages/comparisons/MailGenProVsCopyAI";
 
@@ -71,9 +68,6 @@ const AppRoutes = () => {
       <Route path="/about" element={<About />} />
       <Route path="/faq" element={<FAQ />} />
       <Route path="/use-cases/founders" element={<UseCaseFounders />} />
-      <Route path="/use-cases/sales" element={<UseCaseSales />} />
-      <Route path="/use-cases/recruiters" element={<UseCaseRecruiters />} />
-      <Route path="/use-cases/freelancers" element={<UseCaseFreelancers />} />
       <Route path="/comparisons/chatgpt" element={<MailGenProVsChatGPT />} />
       <Route path="/comparisons/copy-ai" element={<MailGenProVsCopyAI />} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

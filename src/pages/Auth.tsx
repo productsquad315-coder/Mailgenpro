@@ -373,7 +373,7 @@ const Auth = () => {
               </div>
             </div>
             <h1 className="text-2xl font-bold tracking-tight">Welcome to Mailgenpro</h1>
-            <p className="text-muted-foreground">Create campaigns that convert</p>
+            <p className="text-muted-foreground">Turn traffic into recovered revenue in 60s</p>
           </div>
 
           <Tabs defaultValue="signin" className="w-full">

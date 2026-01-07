@@ -5,33 +5,33 @@ const FeaturesGrid = () => {
   const features = [
     {
       icon: Zap,
-      title: "Generate in Seconds",
-      description: "Paste your URL and get a complete email sequence in under 30 seconds. No prompts needed."
+      title: "Launch flows 10x faster",
+      description: "Go from blank account to fully written cart, welcome, and post-purchase flows in minutes—not weeks waiting on an agency."
     },
     {
       icon: FileText,
-      title: "4-12 Email Sequences",
-      description: "Choose your drip duration and get perfectly timed campaigns optimized for conversion."
+      title: "Battle-tested blueprints",
+      description: "Choose from proven abandoned-cart, browse-abandon, welcome, post-purchase, win-back, and VIP playbooks used by top stores."
     },
     {
       icon: Download,
-      title: "Export as HTML",
-      description: "Download ESP-ready HTML files that work with any email platform. One click, done."
+      title: "Works with your stack",
+      description: "One-click HTML export for Klaviyo, Mailchimp, Shopify Email, and every major email platform."
     },
     {
       icon: Globe,
-      title: "Multi-Language",
-      description: "Translate your entire campaign into 30+ languages with one click. Global reach, zero effort."
+      title: "Sell globally",
+      description: "Translate your entire campaign into 30+ languages. Recover lost carts across borders without extra copywriters."
     },
     {
       icon: Sparkles,
-      title: "AI Improvements",
-      description: "Refine any email instantly with AI-powered suggestions. Make it better without rewriting."
+      title: "Smart Improvements",
+      description: "Click 'Improve' to refine any email instantly. Adjust tone or urgency to hit industry benchmarks (10-15% recovery)."
     },
     {
       icon: Clock,
-      title: "Smart Timing",
-      description: "Optimized drip schedules based on best practices. Your emails land when prospects are ready."
+      title: "Optimized Timing",
+      description: "Proven drip schedules based on e-commerce best practices to maximize open rates and revenue recovery."
     }
   ];
 

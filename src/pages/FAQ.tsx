@@ -47,30 +47,30 @@ const FAQ = () => {
 
                     <Accordion type="single" collapsible className="w-full">
                         <AccordionItem value="item-1">
-                            <AccordionTrigger className="text-lg font-medium text-left">What is MailGenPro?</AccordionTrigger>
+                            <AccordionTrigger className="text-lg font-medium text-left">What is Mailgenpro?</AccordionTrigger>
                             <AccordionContent className="text-muted-foreground leading-relaxed">
-                                MailGenPro is a specialized AI tool designed to write high-converting cold emails. It analyzes your company's value proposition and your prospect's needs to generate personalized outreach sequences that don't sound robotic.
+                                Mailgenpro is an email revenue recovery tool built specifically for e-commerce. It analyzes your store URL and instantly generates complete abandoned-cart, welcome, and post-purchase sequences that you can paste into your ESP.
                             </AccordionContent>
                         </AccordionItem>
 
                         <AccordionItem value="item-2">
-                            <AccordionTrigger className="text-lg font-medium text-left">Is MailGenPro safe for cold email?</AccordionTrigger>
+                            <AccordionTrigger className="text-lg font-medium text-left">Is Mailgenpro safe for my store?</AccordionTrigger>
                             <AccordionContent className="text-muted-foreground leading-relaxed">
-                                Yes. MailGenPro is built with spam-avoidance best practices in mind. We prioritize text-based formatting, minimize spam trigger words, and encourage personalization, which helps improve deliverability compared to generic, bulk automated emails.
+                                Yes. Mailgenpro generates high-quality, human-centric copy that avoids common spam triggers. Our sequences are designed to build trust and recover revenue, fitting perfectly within the branding guidelines of top-tier Shopify and WooCommerce stores.
                             </AccordionContent>
                         </AccordionItem>
 
                         <AccordionItem value="item-3">
-                            <AccordionTrigger className="text-lg font-medium text-left">Who should use MailGenPro?</AccordionTrigger>
+                            <AccordionTrigger className="text-lg font-medium text-left">Who should use Mailgenpro?</AccordionTrigger>
                             <AccordionContent className="text-muted-foreground leading-relaxed">
-                                MailGenPro is designed for founders, sales teams, recruiters, and freelancers who need to send effective cold outreach but don't have the time to write every email from scratch. It is best for those who value quality and conversion over mass volume.
+                                Mailgenpro is built for e-commerce founders on Shopify & WooCommerce who want to turn their existing traffic into revenue. If you have visitors leaving without buying, Mailgenpro helps you get them back with automated flows—no copywriter needed.
                             </AccordionContent>
                         </AccordionItem>
 
                         <AccordionItem value="item-4">
                             <AccordionTrigger className="text-lg font-medium text-left">How is it different from ChatGPT?</AccordionTrigger>
                             <AccordionContent className="text-muted-foreground leading-relaxed">
-                                Unlike ChatGPT, which is a general-purpose AI, MailGenPro is purpose-built for cold sales outreach. It includes specific personalization logic, spam-safe formatting checks, and sales frameworks (like AIDA or PAS) baked into the generation process to maximize reply rates.
+                                Unlike ChatGPT, which requires complex prompts and manual structuring, Mailgenpro is purpose-built for e-commerce workflows. It reads your product info and instantly outputs complete sequences (timing, subject lines, and body) ready for Klaviyo or Shopify Email.
                             </AccordionContent>
                         </AccordionItem>
 

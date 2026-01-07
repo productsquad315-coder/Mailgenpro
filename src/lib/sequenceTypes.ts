@@ -1,112 +1,86 @@
-export const sellerSequenceTypes = [
-  { 
-    value: "welcome", 
-    label: "Welcome Series", 
-    description: "Say hi, offer a first-time purchase incentive or showcase top products." 
+export const ecommerceSequenceTypes = [
+  {
+    value: "abandoned-cart",
+    label: "Abandoned Cart Recovery",
+    description: "Uses 'Loss Aversion' and PAS framework to recover 15-20% of lost revenue."
   },
-  { 
-    value: "abandoned-cart", 
-    label: "Abandoned Cart Recovery", 
-    description: "Remind customers about items left in cart." 
+  {
+    value: "welcome-vip",
+    label: "Welcome / VIP Series",
+    description: "Multi-stage intro that builds trust and uses 'First-Time' hooks to drive instant ROI."
   },
-  { 
-    value: "browse-abandonment", 
-    label: "Browse Abandonment", 
-    description: "Target users who browsed but didn't add anything to cart." 
+  {
+    value: "browse-abandonment",
+    label: "Browse Abandonment",
+    description: "Soft-touch 'Product Education' sequences for visitors who looked but didn't buy."
   },
-  { 
-    value: "checkout-abandonment", 
-    label: "Checkout Abandonment", 
-    description: "For users who started checkout but didn't complete." 
+  {
+    value: "checkout-abandonment",
+    label: "Checkout Recovery",
+    description: "High-urgency triggers to overcome last-minute friction at the payment stage."
   },
-  { 
-    value: "post-purchase", 
-    label: "Post‑Purchase Thank‑You / Order Follow‑Up", 
-    description: "Confirm order, say thanks, maybe cross-sell." 
+  {
+    value: "post-purchase-loyalty",
+    label: "Post-Purchase & Loyalty",
+    description: "Maximizes LTV (Lifetime Value) through 'Surprise & Delight' and automated cross-sells."
   },
-  { 
-    value: "review-request", 
-    label: "Review Request Series", 
-    description: "Ask for reviews / feedback after purchase or delivery." 
+  {
+    value: "win-back",
+    label: "Customer Win-Back",
+    description: "Re-ignites interest for lapsed buyers using 'FOMO' and historical relevance hooks."
   },
-  { 
-    value: "upsell", 
-    label: "Upsell / Cross‑Sell Series", 
-    description: "Promote complementary products or premium versions." 
+  {
+    value: "review-referral",
+    label: "Social Proof & Referral",
+    description: "Systematic review collection to build public trust and lower acquisition costs."
   },
-  { 
-    value: "re-engagement", 
-    label: "Re‑engagement / Win‑Back", 
-    description: "Reconnect with customers who haven't bought in a while." 
-  },
-  { 
-    value: "vip-loyalty", 
-    label: "VIP / Loyalty Sequence", 
-    description: "Reward repeat customers, make them feel special." 
-  },
-  { 
-    value: "back-in-stock", 
-    label: "Back‑in‑Stock / Price‑Drop Alert", 
-    description: "Notify customers when products they liked or wishlisted return or go on discount." 
+  {
+    value: "flash-sale",
+    label: "Flash Sale / Promotion",
+    description: "High-intensity bursts with scarcity-driven copy for inventory clearance or launches."
   },
 ];
 
-export const founderSequenceTypes = [
-  { 
-    value: "welcome-onboarding", 
-    label: "Welcome / Onboarding Sequence", 
-    description: "Introduce the product, highlight 'aha' moments, set expectations." 
+export const saasSequenceTypes = [
+  {
+    value: "welcome-onboarding",
+    label: "Product Onboarding",
+    description: "The 'AHA Moment' sequence: focused on rapid user activation and platform habit-building."
   },
-  { 
-    value: "trial-upgrade", 
-    label: "Trial → Paid Upgrade Flow", 
-    description: "Guide trial users toward conversion, with reminders and value nudges." 
+  {
+    value: "trial-upgrade",
+    label: "Trial → Paid Upgrade",
+    description: "A conversion-focused drip that maps value milestones to upgrade incentives."
   },
-  { 
-    value: "activation", 
-    label: "Activation / Feature Education Flow", 
-    description: "Teach users how to use key features, drive adoption." 
+  {
+    value: "feature-activation",
+    label: "Feature Adoption",
+    description: "Deep-dives into under-utilized features to reduce churn and increase stickiness."
   },
-  { 
-    value: "feature-announcement", 
-    label: "Feature Announcement / Product Launch", 
-    description: "Announce new features, explain why they matter, get people excited." 
+  {
+    value: "educational-nurture",
+    label: "Authority / Nurture Drip",
+    description: "Position yourself as an industry expert using value-first, non-salesy educational copy."
   },
-  { 
-    value: "educational-nurture", 
-    label: "Educational / Nurture Drip", 
-    description: "Share value-driven content, tips, or best practices." 
+  {
+    value: "churn-recovery",
+    label: "SaaS Win-Back",
+    description: "Hard-hitting logic to recover churned users before they settle with a competitor."
   },
-  { 
-    value: "churn-recovery", 
-    label: "Churn Recovery / Win‑Back", 
-    description: "Re-engage inactive or churned users." 
+  {
+    value: "founder-story",
+    label: "Founder Story / Brand Audit",
+    description: "Humanize the scale through a vulnerability-led origin story to build long-term trust."
   },
-  { 
-    value: "expansion-upgrade", 
-    label: "Expansion / Upgrade Flow", 
-    description: "For existing users: upsell to higher tiers, promote add-ons." 
-  },
-  { 
-    value: "customer-success", 
-    label: "Customer Success / Adoption Sequence", 
-    description: "Help customers get more value, reduce support friction." 
-  },
-  { 
-    value: "founder-story", 
-    label: "Founder Story / Brand Story", 
-    description: "Humanize the brand, build trust through the founder's journey." 
-  },
-  { 
-    value: "newsletter", 
-    label: "Weekly Newsletter / Regular Content", 
-    description: "Keep users engaged with updates, insights, content, or news." 
+  {
+    value: "expansion-upsell",
+    label: "Expansion / Seat Upgrade",
+    description: "Targeted nudges for power users to move into higher tiers or add teammates."
   },
 ];
 
-export const getSequenceTypes = (userPlatform: string | null | undefined) => {
-  if (userPlatform === "seller") return sellerSequenceTypes;
-  if (userPlatform === "founder") return founderSequenceTypes;
-  // Default to founder types for guests or undefined
-  return founderSequenceTypes;
+export const getSequenceTypes = (userPlatform?: string | null) => {
+  // We prioritize E-commerce (seller) but maintain SaaS (founder) as a powerful alternative.
+  if (userPlatform === "saas" || userPlatform === "founder") return saasSequenceTypes;
+  return ecommerceSequenceTypes;
 };
