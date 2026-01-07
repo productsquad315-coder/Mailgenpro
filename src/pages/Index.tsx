@@ -122,7 +122,7 @@ const Index = () => {
                 </h1>
 
                 <p className="text-xl md:text-2xl mb-12 leading-relaxed text-muted-foreground max-w-xl">
-                  Analyze your site to generate high-converting email campaigns in seconds. No prompt engineering required.
+                  Paste your URL. Our AI analyzes your brand voice to generate high-converting Abandoned Cart, Welcome, and Post-Purchase sequences in seconds.
                 </p>
 
                 <motion.div
@@ -177,7 +177,7 @@ const Index = () => {
               Launch flows 10x faster.
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Go from blank account to fully written cart, welcome, and post-purchase flows in minutes—not weeks waiting on an agency.
+              Go from blank account to fully written Abandoned Cart, Welcome, and Post-Purchase flows in minutes—not weeks waiting on an agency.
             </p>
           </motion.div>
 

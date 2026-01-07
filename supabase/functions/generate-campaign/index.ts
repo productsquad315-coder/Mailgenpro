@@ -331,9 +331,13 @@ ${cleanBody.substring(0, 15000)}
     };
 
     // Tone-Specific Copywriting Strategies
+    const analyzedData = campaignDetails?.analyzed_data as any || {};
+    detectedVoice = analyzedData.detected_voice || detectedVoice || "Neutral Professional";
+    const rawTextSample = analyzedData.raw_text_sample || "";
+
     const toneInstructions = {
       adaptive: `STRATEGY: ADAPTIVE PRO.
-      - ANALYZE: Look at the 'detected_voice' (${cleanedData.detected_voice}) and the 'raw_text_sample'.
+      - ANALYZE: Look at the 'detected_voice' (${detectedVoice}) and the 'raw_text_sample'.
       - MIMIC: Match the sentence length, vocabulary level, and energy of the brand.
       - ELEVATE: Take their voice and apply "Top 1%" direct response principles.
       - IF SLANG: Use it naturally. IF FORMAL: Be precise.
@@ -598,8 +602,8 @@ ${cleanBody.substring(0, 15000)}
               content: `Analyze this website data and product details to construct a "Strategic Blueprint" for a ${campaignSequenceType.toUpperCase()} email sequence.
               
               === WEBSITE DATA (Scraped) ===
-              detected_voice: ${cleanedData.detected_voice}
-              raw_text_sample: ${cleanedData.raw_text_sample}
+              detected_voice: ${detectedVoice}
+              raw_text_sample: ${rawTextSample}
               ${pageContent.substring(0, 12000)}
               
               === BRAND GUIDELINES ===
@@ -703,7 +707,7 @@ NOTE: Ensure HTML is robust. If using a white background container, ensure text 
 
 === COPYWRITING VOICE: ADAPTIVE / TOP 1% ===
 ${selectedToneInstruction}
-DETECTED BRAND VOICE: ${cleanedData.detected_voice || 'Unknown'}
+DETECTED BRAND VOICE: ${detectedVoice}
 INSTRUCTION: Adopt this persona but Upgrade it with Direct Response triggers.
 
 ${blueprintContext}
