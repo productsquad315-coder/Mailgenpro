@@ -145,6 +145,7 @@ serve(async (req) => {
     let pageContent = "";
     let cleanBody = "";
     let primaryColor = "#7c3aed"; // Default Mailgenpro purple
+    let detectedVoice = "Neutral Professional";
 
     try {
       console.log(`[SCRAPER] Level 1: Fetching ${url}`);
@@ -189,6 +190,17 @@ serve(async (req) => {
         // Filter out common colors like #fff, #000, #eee
         const brandColors = potentialColors.filter(c => !['#ffffff', '#000000', '#eeeeee', '#cccccc', '#ffffff', '#000'].includes(c.toLowerCase()));
         primaryColor = brandColors[0] || primaryColor;
+
+        // --- BRAND VOICE ANALYSIS ENGINE ---
+        // Analyze text for tone markers
+        const textSample = cleanBody.substring(0, 3000);
+        const hasExclamations = (textSample.match(/!/g) || []).length > 5;
+        const hasSlang = (textSample.match(/\b(gotta|wanna|cool|awesome|heck|damn)\b/i) || []).length > 0;
+        const isAcademic = (textSample.match(/\b(therefore|consequently|specifications|methodology)\b/i) || []).length > 2;
+
+        if (hasSlang && hasExclamations) detectedVoice = "High Energy & Casual";
+        if (isAcademic) detectedVoice = "Technical & Authoritative";
+        if (!hasSlang && !hasExclamations && !isAcademic) detectedVoice = "Clean Minimalist";
 
         // --- META TAG EXTRACTION ---
         const metaDescMatch = html.match(/<meta\s+name=["']description["']\s+content=["'](.*?)["']/i);
@@ -302,20 +314,35 @@ ${cleanBody.substring(0, 15000)}
     const templateStyle = campaignDetails?.analyzed_data?.template_style || "minimal";
     const copyTone = campaignDetails?.analyzed_data?.copy_tone || "authentic";
 
-    // Layout-Specific HTML/CSS Strategies
+    // Layout-Specific HTML/CSS Strategies (Theme-Aware)
     const layoutInstructions = {
-      minimal: "HTML: Pure, raw text-based HTML. Only <a> tags allowed. No borders, no cards. Looks like a personal email from a friend's Gmail.",
-      branded: `HTML: Clean, professional structure. Use a 1px solid #e2e8f0 border around a container. Use ${primaryColor} for the CTA button background and important links. Standard 16px font-size.`,
-      card: `HTML: Place the primary offer inside a rounded card with a subtle shadow (box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1)). Use ${primaryColor} for the primary header and button.`,
-      editorial: `HTML: High-impact typography. Large bold headers. Use ${primaryColor} as a background for a full-width header section or footer. Dramatic but clean.`
+      minimal: "HTML: Pure, raw text-based HTML. Only <a> tags allowed. No borders. LOOKS LIKE A PERSONAL EMAIL. Do NOT use <div> containers with backgrounds.",
+      branded: `HTML: Professional HTML structure. 
+        - CONTAINER: <div style="max-width:600px; margin:0 auto; font-family:sans-serif; color:#1a1a1a; background-color:#ffffff; padding:20px; border:1px solid #e2e8f0; border-radius:8px;">
+        - DARK MODE: Ensure text remains readable. Use neutral grays for borders.
+        - BRANDING: Use ${primaryColor} for CTA buttons (<a style="background-color:${primaryColor}; color:#ffffff; padding:12px 24px; border-radius:5px; text-decoration:none; display:inline-block;">).`,
+      card: `HTML: Product-focus card. 
+        - CARD: <div style="max-width:600px; margin:0 auto; font-family:sans-serif; background:#fff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.08); overflow:hidden;">
+        - HEADER: <div style="background:${primaryColor}; padding:20px; text-align:center; color:#fff;">
+        - BODY: <div style="padding:24px; color:#333;">`,
+      editorial: `HTML: Magazine style. 
+        - HEADER: Large, bold typography. <h1 style="font-family:serif; font-size:32px; color:#111; margin-bottom:10px;">
+        - ACCENT: Use ${primaryColor} for horizontal rules (<hr style="border:0; border-top:4px solid ${primaryColor}; margin:20px 0;">).`
     };
 
     // Tone-Specific Copywriting Strategies
     const toneInstructions = {
-      authentic: "Strategy: Raw, vulnerability-led authenticity. Staccato rhythm. Admit imperfections. No hype. Use asides (like this).",
-      momentum: "Strategy: High-momentum, direct-response. Aggressive hooks. Punchy short sentences. High-urgency triggers. Scarcity-focused.",
-      expert: "Strategy: Professional Advisory. Data-driven, precise, logical. Authoritative but respectful. Institutional knowledge style.",
-      story: "Strategy: Narrative-heavy 'Storyteller' vibe. Flowy, curiosity-driven loops. Build the 'Enemy' and 'Hero' arc throughout the email."
+      adaptive: `STRATEGY: ADAPTIVE PRO.
+      - ANALYZE: Look at the 'detected_voice' (${cleanedData.detected_voice}) and the 'raw_text_sample'.
+      - MIMIC: Match the sentence length, vocabulary level, and energy of the brand.
+      - ELEVATE: Take their voice and apply "Top 1%" direct response principles.
+      - IF SLANG: Use it naturally. IF FORMAL: Be precise.
+      - GOAL: The user must feel "This sounds exactly like us, but better".`,
+      /* Legacy fallbacks */
+      authentic: "Strategy: Raw, vulnerability-led authenticity. Staccato rhythm. Admit imperfections. No hype.",
+      momentum: "Strategy: High-momentum, direct-response. Aggressive hooks. Punchy short sentences.",
+      expert: "Strategy: Professional Advisory. Data-driven, precise, logical. Authoritative.",
+      story: "Strategy: Narrative-heavy 'Storyteller' vibe. Flowy, curiosity-driven loops."
     };
 
     const selectedLayoutInstruction = layoutInstructions[templateStyle as keyof typeof layoutInstructions] || layoutInstructions.minimal;
@@ -570,7 +597,9 @@ ${cleanBody.substring(0, 15000)}
               role: "user",
               content: `Analyze this website data and product details to construct a "Strategic Blueprint" for a ${campaignSequenceType.toUpperCase()} email sequence.
               
-              === WEBSITE DATA ===
+              === WEBSITE DATA (Scraped) ===
+              detected_voice: ${cleanedData.detected_voice}
+              raw_text_sample: ${cleanedData.raw_text_sample}
               ${pageContent.substring(0, 12000)}
               
               === BRAND GUIDELINES ===
@@ -670,9 +699,12 @@ MATCH the exact tone of the Landing Page content.
 
 === VISUAL LAYOUT ALIGNMENT: ${templateStyle.toUpperCase()} ===
 ${selectedLayoutInstruction}
+NOTE: Ensure HTML is robust. If using a white background container, ensure text is dark. 
 
-=== COPYWRITING VOICE: ${copyTone.toUpperCase()} ===
+=== COPYWRITING VOICE: ADAPTIVE / TOP 1% ===
 ${selectedToneInstruction}
+DETECTED BRAND VOICE: ${cleanedData.detected_voice || 'Unknown'}
+INSTRUCTION: Adopt this persona but Upgrade it with Direct Response triggers.
 
 ${blueprintContext}
 

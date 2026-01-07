@@ -39,7 +39,7 @@ const GuestCampaignFlow = () => {
   const [emailCount, setEmailCount] = useState("");
   const [wordCount, setWordCount] = useState("");
   const [layoutType, setLayoutType] = useState("minimal");
-  const [copyTone, setCopyTone] = useState("authentic");
+  // copyTone removed: AI now auto-detects
 
   const handleNext = () => {
     if (step === 1 && !url) {
@@ -82,8 +82,8 @@ const GuestCampaignFlow = () => {
       toast.error("Please enter a valid word count (minimum 50 words)");
       return;
     }
-    if (step === 5 && (!layoutType || !copyTone)) {
-      toast.error("Please select a layout and tone");
+    if (step === 5 && !layoutType) {
+      toast.error("Please select a layout");
       return;
     }
 
@@ -114,7 +114,7 @@ const GuestCampaignFlow = () => {
           user_id: null, // Guest campaign
           analyzed_data: {
             template_style: layoutType,
-            copy_tone: copyTone
+            copy_tone: 'adaptive'
           }
         })
         .select()
@@ -509,26 +509,7 @@ const GuestCampaignFlow = () => {
                         </div>
                       </div>
 
-                      <div>
-                        <Label className="text-lg font-semibold mb-4 block">Copywriting Tone</Label>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          {[
-                            { id: 'authentic', label: 'Raw', desc: 'Authentic' },
-                            { id: 'momentum', label: 'Hooks', desc: 'Momentum' },
-                            { id: 'expert', label: 'Expert', desc: 'Advisory' },
-                            { id: 'story', label: 'Story', desc: 'Narrative' },
-                          ].map((t) => (
-                            <button
-                              key={t.id}
-                              onClick={() => setCopyTone(t.id)}
-                              className={`p-4 rounded-xl border-2 transition-all text-left ${copyTone === t.id ? 'border-primary bg-primary/5 shadow-md scale-105' : 'border-border hover:border-primary/30'}`}
-                            >
-                              <div className="font-bold text-sm">{t.label}</div>
-                              <div className="text-[10px] text-muted-foreground">{t.desc}</div>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
+                      {/* Tone Section Removed - Auto-detected by AI */}
 
                       <div>
                         <Label htmlFor="wordCount" className="text-lg font-semibold mb-4 block">Words Per Email</Label>
@@ -586,8 +567,8 @@ const GuestCampaignFlow = () => {
                             <p className="font-medium">{getSequenceTypes(userPlatform).find(s => s.value === sequenceType)?.label}</p>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">Layout & Tone:</span>
-                            <p className="font-medium capitalize">{layoutType} / {copyTone}</p>
+                            <span className="text-muted-foreground">Layout & Mode:</span>
+                            <p className="font-medium capitalize">{layoutType} / Adaptive</p>
                           </div>
                           <div>
                             <span className="text-muted-foreground">Emails:</span>

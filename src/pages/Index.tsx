@@ -118,11 +118,11 @@ const Index = () => {
                 </div>
 
                 <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold mb-10 leading-[0.95] tracking-tighter">
-                  70% of your visitors leave without buying. <span className="gradient-text">Get them back automatically.</span>
+                  Turn your websites into <span className="gradient-text">emails that sell.</span>
                 </h1>
 
                 <p className="text-xl md:text-2xl mb-12 leading-relaxed text-muted-foreground max-w-xl">
-                  Paste your store URL and generate complete abandoned-cart, welcome, and post-purchase sequences in under 30 seconds—ready to paste into Klaviyo, Mailchimp, or Shopify Email.
+                  Analyze your site to generate high-converting email campaigns in seconds. No prompt engineering required.
                 </p>
 
                 <motion.div

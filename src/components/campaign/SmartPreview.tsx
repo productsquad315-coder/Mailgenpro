@@ -43,7 +43,7 @@ const SmartPreview = ({
   };
 
   // Generate the themed HTML for preview using the same logic as the export
-  const themedHtml = generateESPReadyHTML(
+  let themedHtml = generateESPReadyHTML(
     { subject, content, html_content: htmlContent },
     brandName,
     ctaLink || null,
@@ -51,6 +51,20 @@ const SmartPreview = ({
     false, // Don't include watermark in smart preview
     currentStyle
   );
+
+  // FORCE DARK MODE IN PREVIEW: Inject styles if theme is 'dark'
+  // This bypasses the browser's 'prefers-color-scheme' so the toggle actually works.
+  if (theme === 'dark') {
+    const darkOverride = `
+      <style>
+        body { background-color: #121212 !important; color: #e5e7eb !important; }
+        .email-container { background-color: #121212 !important; color: #e5e7eb !important; border-color: #374151 !important; }
+        h1 { color: #f9fafb !important; }
+        a { color: #60a5fa !important; }
+      </style>
+    `;
+    themedHtml = themedHtml.replace('</head>', `${darkOverride}</head>`);
+  }
 
   return (
     <Dialog>
@@ -160,7 +174,7 @@ const SmartPreview = ({
                   width: '100%',
                   height: device === 'mobile' ? '600px' : '800px',
                   border: 'none',
-                  backgroundColor: 'white'
+                  backgroundColor: theme === 'dark' ? '#121212' : 'white'
                 }}
               />
             </div>
